@@ -1,49 +1,49 @@
-import { useState } from “react”;
-import Layout from “../components/Layout”;
+import { useState } from "react";
+import Layout from "../components/Layout";
 
 // ─── DATA ────────────────────────────────────────────────────────────────────
 
 const COLORS = [
-{ id: “alb”, label: “Alb Mat”, hex: “#F5F5F0” },
-{ id: “gri”, label: “Gri Antracit”, hex: “#3D3D3D” },
-{ id: “negru”, label: “Negru Mat”, hex: “#1A1A1A” },
-{ id: “stejar”, label: “Stejar Natural”, hex: “#C19A6B” },
-{ id: “nuc”, label: “Nuc Inchis”, hex: “#6B4C2A” },
-{ id: “verde”, label: “Verde Salvie”, hex: “#7D9B76” },
-{ id: “bej”, label: “Bej Cald”, hex: “#E8DCC8” },
-{ id: “albastru”, label: “Albastru Navy”, hex: “#2C3E6B” },
+{ id: "alb", label: "Alb Mat", hex: "#F5F5F0" },
+{ id: "gri", label: "Gri Antracit", hex: "#3D3D3D" },
+{ id: "negru", label: "Negru Mat", hex: "#1A1A1A" },
+{ id: "stejar", label: "Stejar Natural", hex: "#C19A6B" },
+{ id: "nuc", label: "Nuc Inchis", hex: "#6B4C2A" },
+{ id: "verde", label: "Verde Salvie", hex: "#7D9B76" },
+{ id: "bej", label: "Bej Cald", hex: "#E8DCC8" },
+{ id: "albastru", label: "Albastru Navy", hex: "#2C3E6B" },
 ];
 
 const FRONTS = [
-{ id: “mat”, label: “Mat” },
-{ id: “lucios”, label: “Lucios” },
-{ id: “texturat”, label: “Texturat” },
-{ id: “lemn”, label: “Lemn” },
+{ id: "mat", label: "Mat" },
+{ id: "lucios", label: "Lucios" },
+{ id: "texturat", label: "Texturat" },
+{ id: "lemn", label: "Lemn" },
 ];
 
 const HANDLES = [
-{ id: “bare”, label: “Bare Metalice” },
-{ id: “rotunde”, label: “Butoni Rotunzi” },
-{ id: “ingropat”, label: “Fără Mâner” },
-{ id: “clasic”, label: “Mâner Clasic” },
+{ id: "bare", label: "Bare Metalice" },
+{ id: "rotunde", label: "Butoni Rotunzi" },
+{ id: "ingropat", label: "Fără Mâner" },
+{ id: "clasic", label: "Mâner Clasic" },
 ];
 
 const DRAWERS = [
-{ id: “standard”, label: “Standard” },
-{ id: “pan”, label: “Tip Pan” },
-{ id: “fara”, label: “Fără Sertare” },
+{ id: "standard", label: "Standard" },
+{ id: "pan", label: "Tip Pan" },
+{ id: "fara", label: "Fără Sertare" },
 ];
 
 const HARDWARE = [
-{ id: “blum”, label: “Blum Premium” },
-{ id: “standard”, label: “Standard” },
+{ id: "blum", label: "Blum Premium" },
+{ id: "standard", label: "Standard" },
 ];
 
 const MODULE_TYPES = [
-{ id: “base”, label: “Corp de Jos”, icon: “▭”, defaultW: 60, defaultH: 85, defaultD: 60, pricePerUnit: 280 },
-{ id: “wall”, label: “Corp de Sus”, icon: “▭”, defaultW: 60, defaultH: 70, defaultD: 35, pricePerUnit: 220 },
-{ id: “tall”, label: “Corp Înalt”, icon: “▯”, defaultW: 60, defaultH: 210, defaultD: 60, pricePerUnit: 420 },
-{ id: “island”, label: “Insulă”, icon: “⬜”, defaultW: 120, defaultH: 90, defaultD: 80, pricePerUnit: 650 },
+{ id: "base", label: "Corp de Jos", icon: "▭", defaultW: 60, defaultH: 85, defaultD: 60, pricePerUnit: 280 },
+{ id: "wall", label: "Corp de Sus", icon: "▭", defaultW: 60, defaultH: 70, defaultD: 35, pricePerUnit: 220 },
+{ id: "tall", label: "Corp Înalt", icon: "▯", defaultW: 60, defaultH: 210, defaultD: 60, pricePerUnit: 420 },
+{ id: "island", label: "Insulă", icon: "⬜", defaultW: 120, defaultH: 90, defaultD: 80, pricePerUnit: 650 },
 ];
 
 const PRICE_MULTIPLIERS = {
@@ -76,35 +76,35 @@ const SCALE = 2.8;
 const CANVAS_H = 320;
 const FLOOR_Y = CANVAS_H - 40;
 
-const baseModules = modules.filter(m => m.type === “base” || m.type === “island”);
-const wallModules = modules.filter(m => m.type === “wall”);
-const tallModules = modules.filter(m => m.type === “tall”);
+const baseModules = modules.filter(m => m.type === "base" || m.type === "island");
+const wallModules = modules.filter(m => m.type === "wall");
+const tallModules = modules.filter(m => m.type === "tall");
 
 // layout: tall units on left, then base units, island separate
 let xCursor = 20;
 const placed = [];
 
 tallModules.forEach(m => {
-placed.push({ …m, x: xCursor, y: FLOOR_Y - m.height * SCALE, w: m.width * SCALE, h: m.height * SCALE });
+placed.push({ ...m, x: xCursor, y: FLOOR_Y - m.height * SCALE, w: m.width * SCALE, h: m.height * SCALE });
 xCursor += m.width * SCALE + 4;
 });
 
-baseModules.filter(m => m.type === “base”).forEach(m => {
-placed.push({ …m, x: xCursor, y: FLOOR_Y - m.height * SCALE, w: m.width * SCALE, h: m.height * SCALE });
+baseModules.filter(m => m.type === "base").forEach(m => {
+placed.push({ ...m, x: xCursor, y: FLOOR_Y - m.height * SCALE, w: m.width * SCALE, h: m.height * SCALE });
 xCursor += m.width * SCALE + 4;
 });
 
 // Wall modules above base modules
 let wxCursor = tallModules.reduce((s, m) => s + m.width * SCALE + 4, 20);
 wallModules.forEach(m => {
-placed.push({ …m, x: wxCursor, y: FLOOR_Y - 85 * SCALE - m.height * SCALE - 20, w: m.width * SCALE, h: m.height * SCALE });
+placed.push({ ...m, x: wxCursor, y: FLOOR_Y - 85 * SCALE - m.height * SCALE - 20, w: m.width * SCALE, h: m.height * SCALE });
 wxCursor += m.width * SCALE + 4;
 });
 
 // Island floats separately
-const islands = modules.filter(m => m.type === “island”);
+const islands = modules.filter(m => m.type === "island");
 islands.forEach((m, i) => {
-placed.push({ …m, x: xCursor + i * (m.width * SCALE + 20), y: FLOOR_Y - m.height * SCALE, w: m.width * SCALE, h: m.height * SCALE });
+placed.push({ ...m, x: xCursor + i * (m.width * SCALE + 20), y: FLOOR_Y - m.height * SCALE, w: m.width * SCALE, h: m.height * SCALE });
 xCursor += m.width * SCALE + 24;
 });
 
@@ -112,44 +112,44 @@ const totalWidth = placed.reduce((max, m) => Math.max(max, m.x + m.w), 0) + 20;
 const svgWidth = Math.max(totalWidth, 500);
 
 function getFrontPattern(moduleType) {
-if (options.front === “lemn”) return “url(#wood)”;
-if (options.front === “texturat”) return “url(#texture)”;
+if (options.front === "lemn") return "url(#wood)";
+if (options.front === "texturat") return "url(#texture)";
 return color.hex;
 }
 
 function getHandleEl(m) {
-if (options.handles === “ingropat”) return null;
+if (options.handles === "ingropat") return null;
 const cx = m.x + m.w / 2;
 const cy = m.y + m.h * 0.65;
-if (options.handles === “bare”) {
-return <rect key={`h-${m.id}`} x={cx - m.w * 0.3} y={cy - 3} width={m.w * 0.6} height={6} rx={3} fill=”#aaa”/>;
+if (options.handles === "bare") {
+return <rect key={`h-${m.id}`} x={cx - m.w * 0.3} y={cy - 3} width={m.w * 0.6} height={6} rx={3} fill="#aaa"/>;
 }
-if (options.handles === “rotunde”) {
-return <circle key={`h-${m.id}`} cx={cx} cy={cy} r={5} fill=”#aaa”/>;
+if (options.handles === "rotunde") {
+return <circle key={`h-${m.id}`} cx={cx} cy={cy} r={5} fill="#aaa"/>;
 }
-return <rect key={`h-${m.id}`} x={cx - 3} y={m.y + m.h * 0.5} width={6} height={m.h * 0.3} rx={2} fill=”#aaa”/>;
+return <rect key={`h-${m.id}`} x={cx - 3} y={m.y + m.h * 0.5} width={6} height={m.h * 0.3} rx={2} fill="#aaa"/>;
 }
 
 function getDrawerLines(m) {
-if (options.drawers === “fara” || m.type === “wall” || m.type === “tall”) return null;
-const lines = options.drawers === “pan” ? 2 : 3;
+if (options.drawers === "fara" || m.type === "wall" || m.type === "tall") return null;
+const lines = options.drawers === "pan" ? 2 : 3;
 return Array.from({ length: lines }).map((_, i) => (
 <line key={`d-${m.id}-${i}`}
 x1={m.x + 4} y1={m.y + (m.h / (lines + 1)) * (i + 1)}
 x2={m.x + m.w - 4} y2={m.y + (m.h / (lines + 1)) * (i + 1)}
-stroke=“rgba(0,0,0,0.12)” strokeWidth=“1.5” strokeDasharray={options.drawers === “pan” ? “none” : “4,2”}
+stroke="rgba(0,0,0,0.12)" strokeWidth="1.5" strokeDasharray={options.drawers === "pan" ? "none" : "4,2"}
 />
 ));
 }
 
-const isLight = [“alb”, “bej”].includes(options.color);
-const strokeColor = isLight ? “#ccc” : “rgba(255,255,255,0.15)”;
-const shadowColor = isLight ? “rgba(0,0,0,0.08)” : “rgba(0,0,0,0.3)”;
+const isLight = ["alb", "bej"].includes(options.color);
+const strokeColor = isLight ? "#ccc" : "rgba(255,255,255,0.15)";
+const shadowColor = isLight ? "rgba(0,0,0,0.08)" : "rgba(0,0,0,0.3)";
 
 return (
-<div style={{ background: “#f8f8f6”, borderRadius: “16px”, overflow: “hidden”, border: “1px solid #eee” }}>
+<div style={{ background: "#f8f8f6", borderRadius: "16px", overflow: "hidden", border: "1px solid #eee" }}>
 {/* Room background */}
-<svg width=“100%” viewBox={`0 0 ${svgWidth} ${CANVAS_H}`} style={{ display: “block” }}>
+<svg width="100%" viewBox={`0 0 ${svgWidth} ${CANVAS_H}`} style={{ display: "block" }}>
 <defs>
 <pattern id="wood" patternUnits="userSpaceOnUse" width="20" height="20">
 <rect width="20" height="20" fill={color.hex}/>
@@ -167,7 +167,7 @@ return (
 </filter>
 </defs>
 
-```
+
     {/* Wall */}
     <rect x="0" y="0" width={svgWidth} height={FLOOR_Y} fill="#FAFAF8"/>
     {/* Floor */}
@@ -230,7 +230,7 @@ return (
     {modules.length === 0 && <span style={{ fontSize: "12px", color: "#bbb" }}>Niciun modul adăugat</span>}
   </div>
 </div>
-```
+
 
 );
 }
@@ -239,25 +239,25 @@ return (
 
 function StepIndicator({ current, steps }) {
 return (
-<div style={{ display: “flex”, alignItems: “center”, gap: “0”, marginBottom: “32px” }}>
+<div style={{ display: "flex", alignItems: "center", gap: "0", marginBottom: "32px" }}>
 {steps.map((step, i) => (
-<div key={i} style={{ display: “flex”, alignItems: “center”, flex: i < steps.length - 1 ? 1 : “none” }}>
-<div style={{ display: “flex”, flexDirection: “column”, alignItems: “center”, gap: “6px” }}>
+<div key={i} style={{ display: "flex", alignItems: "center", flex: i < steps.length - 1 ? 1 : "none" }}>
+<div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "6px" }}>
 <div style={{
-width: “32px”, height: “32px”, borderRadius: “50%”, display: “flex”, alignItems: “center”, justifyContent: “center”,
-fontSize: “13px”, fontWeight: 700, transition: “all 0.3s”,
-background: i < current ? “var(–green)” : i === current ? “var(–green)” : “#eee”,
-color: i <= current ? “#fff” : “#999”,
-boxShadow: i === current ? “0 0 0 4px rgba(141,198,63,0.2)” : “none”,
+width: "32px", height: "32px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center",
+fontSize: "13px", fontWeight: 700, transition: "all 0.3s",
+background: i < current ? "var(-green)" : i === current ? "var(-green)" : "#eee",
+color: i <= current ? "#fff" : "#999",
+boxShadow: i === current ? "0 0 0 4px rgba(141,198,63,0.2)" : "none",
 }}>
-{i < current ? “✓” : i + 1}
+{i < current ? "✓" : i + 1}
 </div>
-<span style={{ fontSize: “11px”, fontWeight: i === current ? 700 : 400, color: i === current ? “var(–green)” : “#999”, whiteSpace: “nowrap” }}>
+<span style={{ fontSize: "11px", fontWeight: i === current ? 700 : 400, color: i === current ? "var(-green)" : "#999", whiteSpace: "nowrap" }}>
 {step}
 </span>
 </div>
 {i < steps.length - 1 && (
-<div style={{ flex: 1, height: “2px”, background: i < current ? “var(–green)” : “#eee”, margin: “0 8px”, marginBottom: “20px”, transition: “background 0.3s” }}/>
+<div style={{ flex: 1, height: "2px", background: i < current ? "var(-green)" : "#eee", margin: "0 8px", marginBottom: "20px", transition: "background 0.3s" }}/>
 )}
 </div>
 ))}
@@ -267,22 +267,22 @@ boxShadow: i === current ? “0 0 0 4px rgba(141,198,63,0.2)” : “none”,
 
 // ─── MAIN PAGE ────────────────────────────────────────────────────────────────
 
-const STEPS = [“Module”, “Dimensiuni”, “Personalizare”, “Rezumat”];
+const STEPS = ["Module", "Dimensiuni", "Personalizare", "Rezumat"];
 
 export default function Configurator() {
 const [step, setStep] = useState(0);
 const [modules, setModules] = useState([]);
 const [options, setOptions] = useState({
-color: “alb”, front: “mat”, handles: “bare”, drawers: “standard”, hardware: “blum”,
+color: "alb", front: "mat", handles: "bare", drawers: "standard", hardware: "blum",
 });
-const [form, setForm] = useState({ name: “”, email: “”, phone: “”, message: “” });
+const [form, setForm] = useState({ name: "", email: "", phone: "", message: "" });
 const [submitted, setSubmitted] = useState(false);
 
 const totalPrice = calcPrice(modules, options);
 
 function addModule(type) {
 const t = MODULE_TYPES.find(m => m.id === type);
-setModules(prev => […prev, {
+setModules(prev => [...prev, {
 id: Date.now(), type,
 width: t.defaultW, height: t.defaultH, depth: t.defaultD,
 }]);
@@ -291,7 +291,7 @@ width: t.defaultW, height: t.defaultH, depth: t.defaultD,
 function removeModule(id) { setModules(prev => prev.filter(m => m.id !== id)); }
 
 function updateModule(id, field, value) {
-setModules(prev => prev.map(m => m.id === id ? { …m, [field]: Number(value) } : m));
+setModules(prev => prev.map(m => m.id === id ? { ...m, [field]: Number(value) } : m));
 }
 
 function handleSubmit(e) {
@@ -302,10 +302,10 @@ setSubmitted(true);
 const canNext = step === 0 ? modules.length > 0 : true;
 
 return (
-<Layout title="Configurator Bucătărie — Kalio">
+<Layout title="Configurator Bucătărie -- Kalio">
 <style>{`.config-tab { background: #f5f5f3; border: 1.5px solid transparent; border-radius: 10px; padding: 14px 16px; cursor: pointer; transition: all 0.2s; text-align: center; } .config-tab:hover { border-color: var(--green); background: #f0f9e0; } .config-tab.selected { border-color: var(--green); background: #f0f9e0; } .color-swatch { width: 36px; height: 36px; border-radius: 50%; cursor: pointer; border: 3px solid transparent; transition: all 0.2s; flex-shrink: 0; } .color-swatch:hover { transform: scale(1.1); } .color-swatch.selected { border-color: var(--green); box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--green); } .option-pill { background: #f5f5f3; border: 1.5px solid #eee; border-radius: 8px; padding: 10px 16px; cursor: pointer; font-size: 13px; font-weight: 500; transition: all 0.2s; font-family: inherit; white-space: nowrap; } .option-pill:hover { border-color: var(--green); color: var(--green); } .option-pill.selected { background: #f0f9e0; border-color: var(--green); color: var(--green); font-weight: 700; } .module-item { background: #f5f5f3; border-radius: 10px; padding: 14px 16px; display: flex; align-items: center; gap: 12px; } .dim-input { width: 72px; padding: 6px 10px; border: 1.5px solid #e0e0e0; border-radius: 6px; font-size: 13px; font-family: inherit; text-align: center; outline: none; } .dim-input:focus { border-color: var(--green); } .summary-row { display: flex; justify-content: space-between; align-items: center; padding: "10px 0"; border-bottom: 1px solid #f0f0f0; } .form-input { width: 100%; padding: 12px 14px; border: 1.5px solid #e0e0e0; border-radius: 8px; font-size: 14px; font-family: inherit; outline: none; transition: border-color 0.2s; } .form-input:focus { border-color: var(--green); } @media (max-width: 768px) { .config-layout { grid-template-columns: 1fr !important; } .preview-sticky { position: static !important; } }`}</style>
 
-```
+
   {/* HERO */}
   <section style={{ paddingTop: "64px", background: "var(--gray)", padding: "100px 40px 60px" }}>
     <div style={{ maxWidth: "800px", margin: "0 auto", textAlign: "center" }}>
@@ -331,7 +331,7 @@ return (
         {/* LEFT PANEL */}
         <div>
 
-          {/* STEP 0 — MODULES */}
+          {/* STEP 0 -- MODULES */}
           {step === 0 && (
             <div>
               <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: "24px", fontWeight: 700, marginBottom: "8px" }}>Alege modulele</h2>
@@ -381,7 +381,7 @@ return (
             </div>
           )}
 
-          {/* STEP 1 — DIMENSIONS */}
+          {/* STEP 1 -- DIMENSIONS */}
           {step === 1 && (
             <div>
               <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: "24px", fontWeight: 700, marginBottom: "8px" }}>Dimensiuni</h2>
@@ -412,7 +412,7 @@ return (
             </div>
           )}
 
-          {/* STEP 2 — CUSTOMIZATION */}
+          {/* STEP 2 -- CUSTOMIZATION */}
           {step === 2 && (
             <div>
               <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: "24px", fontWeight: 700, marginBottom: "8px" }}>Personalizare</h2>
@@ -479,7 +479,7 @@ return (
             </div>
           )}
 
-          {/* STEP 3 — SUMMARY + FORM */}
+          {/* STEP 3 -- SUMMARY + FORM */}
           {step === 3 && (
             <div>
               {submitted ? (
@@ -506,7 +506,7 @@ return (
                         const t = MODULE_TYPES.find(mt => mt.id === m.type);
                         return (
                           <div key={m.id} style={{ display: "flex", justifyContent: "space-between", fontSize: "14px" }}>
-                            <span>{t.label} — {m.width}×{m.height}×{m.depth} cm</span>
+                            <span>{t.label} -- {m.width}×{m.height}×{m.depth} cm</span>
                             <span style={{ color: "var(--green)", fontWeight: 600 }}>~{Math.round(t.pricePerUnit * Math.max(0.8, (m.width / t.defaultW) * (m.height / t.defaultH)))} €</span>
                           </div>
                         );
@@ -578,7 +578,7 @@ return (
           )}
         </div>
 
-        {/* RIGHT PANEL — PREVIEW */}
+        {/* RIGHT PANEL -- PREVIEW */}
         <div style={{ position: "sticky", top: "84px" }} className="preview-sticky">
           <div style={{ background: "#fff", border: "1px solid #eee", borderRadius: "16px", padding: "20px", boxShadow: "0 4px 24px rgba(0,0,0,0.06)" }}>
             <h3 style={{ fontSize: "13px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "1px", color: "#666", marginBottom: "16px" }}>
@@ -604,7 +604,7 @@ return (
     </div>
   </section>
 </Layout>
-```
+
 
 );
 }

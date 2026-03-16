@@ -1,4 +1,4 @@
-import Layout, { useInView, GreenCTABanner } from “../components/Layout”;
+import Layout, { useInView, GreenCTABanner } from "../components/Layout";
 
 const FEATURES = [
 {
@@ -9,8 +9,8 @@ icon: (
 <circle cx="6" cy="26" r="3" stroke="#8DC63F" strokeWidth="2"/>
 </svg>
 ),
-title: “Personalizare totală”,
-desc: “Personalizează mobilierul exact cum dorești. Alege culorile, fronturile, mânerele și multe altele.”,
+title: "Personalizare totală",
+desc: "Personalizează mobilierul exact cum dorești. Alege culorile, fronturile, mânerele și multe altele.",
 },
 {
 icon: (
@@ -20,8 +20,8 @@ icon: (
 <circle cx="16" cy="20" r="2" fill="#8DC63F"/>
 </svg>
 ),
-title: “PAL Hidrofugat Premium”,
-desc: “Construit din PAL hidrofugat premium, cu spate solid de 8 mm pentru durabilitate sporită.”,
+title: "PAL Hidrofugat Premium",
+desc: "Construit din PAL hidrofugat premium, cu spate solid de 8 mm pentru durabilitate sporită.",
 },
 {
 icon: (
@@ -30,8 +30,8 @@ icon: (
 <path d="M16 9v7l4 4" stroke="#8DC63F" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
 </svg>
 ),
-title: “Livrare rapidă”,
-desc: “Fără luni de așteptare. Mobilierul tău personalizat ajunge la tine rapid și eficient.”,
+title: "Livrare rapidă",
+desc: "Fără luni de așteptare. Mobilierul tău personalizat ajunge la tine rapid și eficient.",
 },
 {
 icon: (
@@ -40,20 +40,20 @@ icon: (
 <rect x="4" y="6" width="24" height="20" rx="3" stroke="#8DC63F" strokeWidth="2"/>
 </svg>
 ),
-title: “Asamblare ușoară”,
-desc: “Mobilierul Kalio este proiectat pentru asamblare facilă, economisind timp și costuri de instalare.”,
+title: "Asamblare ușoară",
+desc: "Mobilierul Kalio este proiectat pentru asamblare facilă, economisind timp și costuri de instalare.",
 },
 ];
 
 const CHECKLIST = [
-“Gamă variată de culori”,
-“Diferite stiluri de fronturi”,
-“Opțiuni de feronerie”,
-“Diverse tipuri de sertare”,
-“Materiale durabile, hidrofugate”,
-“Dimensiuni atipice”,
-“Timp de livrare redus”,
-“Asamblare DIY ușoară”,
+"Gamă variată de culori",
+"Diferite stiluri de fronturi",
+"Opțiuni de feronerie",
+"Diverse tipuri de sertare",
+"Materiale durabile, hidrofugate",
+"Dimensiuni atipice",
+"Timp de livrare redus",
+"Asamblare DIY ușoară",
 ];
 
 export default function Home() {
@@ -63,9 +63,9 @@ const [featuresRef, featuresInView] = useInView(0.1);
 const [ctaRef, ctaInView] = useInView(0.1);
 
 return (
-<Layout title="Kalio — Mobilier Modular, Reinventat">
+<Layout title="Kalio -- Mobilier Modular, Reinventat">
 
-```
+
   {/* HERO */}
   <section ref={heroRef} style={{ paddingTop: "64px", minHeight: "92vh", display: "grid", gridTemplateColumns: "1fr 1fr", alignItems: "center", gap: "48px", maxWidth: "1200px", margin: "0 auto", padding: "120px 40px 80px" }} className="hero-grid">
     <div>
@@ -77,7 +77,7 @@ return (
         <em style={{ color: "var(--green)", fontStyle: "italic" }}>reinventat.</em>
       </h1>
       <p className={`fade-up d2 ${heroInView ? "visible" : ""}`} style={{ fontSize: "16px", lineHeight: 1.7, color: "var(--text-muted)", maxWidth: "420px", marginBottom: "36px" }}>
-        Creează-ți spațiul perfect cu Kalio — mobilier personalizabil, de calitate superioară, livrat rapid și ușor de asamblat.
+        Creează-ți spațiul perfect cu Kalio -- mobilier personalizabil, de calitate superioară, livrat rapid și ușor de asamblat.
       </p>
       <div className={`fade-up d3 ${heroInView ? "visible" : ""}`} style={{ display: "flex", gap: "14px", flexWrap: "wrap" }}>
         <a href="/configurator" className="btn-primary" style={{ fontSize: "15px", padding: "13px 28px" }}>Creează-ți mobila</a>
@@ -118,7 +118,7 @@ return (
         <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: "clamp(28px, 3.5vw, 44px)", fontWeight: 700, lineHeight: 1.2, maxWidth: "680px", margin: "0 auto" }}>
           La Kalio, credem că{" "}
           <span style={{ color: "var(--green)" }}>mobilierul trebuie</span>{" "}
-          să se adapteze stilului tău de viață —{" "}
+          să se adapteze stilului tău de viață --{" "}
           <em style={{ fontStyle: "italic" }}>nu invers.</em>
         </h2>
       </div>
@@ -155,7 +155,7 @@ return (
         <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: "clamp(26px, 3vw, 38px)", fontWeight: 700 }}>
           De ce să alegi <span style={{ color: "var(--green)" }}>Kalio?</span>
         </h2>
-        <p style={{ color: "var(--text-muted)", marginTop: "12px", fontSize: "15px" }}>Calitate, viteză și personalizare — totul într-un singur loc.</p>
+        <p style={{ color: "var(--text-muted)", marginTop: "12px", fontSize: "15px" }}>Calitate, viteză și personalizare -- totul într-un singur loc.</p>
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "20px" }} className="features-grid">
         {FEATURES.map((f, i) => (
@@ -207,7 +207,7 @@ return (
   />
 
 </Layout>
-```
+
 
 );
 }
