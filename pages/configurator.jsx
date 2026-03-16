@@ -100,13 +100,41 @@ function autoFitGroup(modules, wallWidthMm) {
   return [...allButLast, last];
 }
 
-/* Auto-fit floor modules and wall cab modules separately against the same wall width */
-function autoFitWall(modules, wallWidthMm) {
+/* Auto-fit floor modules and wall cab modules separately, each against their own available width */
+function autoFitWall(modules, floorAvail, wallCabAvail) {
   const floorMods = modules.filter(m => FLOOR_TYPES.includes(m.type));
   const wallMods = modules.filter(m => WALL_CAB_TYPES.includes(m.type));
-  const fittedFloor = autoFitGroup(floorMods, wallWidthMm);
-  const fittedWallCabs = autoFitGroup(wallMods, wallWidthMm);
+  const fittedFloor = autoFitGroup(floorMods, floorAvail);
+  const fittedWallCabs = autoFitGroup(wallMods, wallCabAvail);
   return [...fittedFloor, ...fittedWallCabs];
+}
+
+/* Calculate available width per wall accounting for corner conflicts.
+   Corner zones are occupied by perpendicular wall cabinet depth (600mm). */
+const CAB_DEPTH_MM = 600;
+
+function getAvailableWidths(wallKey, layout, wallDimensions) {
+  const wallMm = wallDimensions[wallKey] || 3000;
+  const activeLayout = LAYOUTS.find(l => l.id === layout);
+  const hasLeft = activeLayout.walls.includes("left");
+  const hasRight = activeLayout.walls.includes("right");
+
+  if (wallKey === "main") {
+    const subtractLeft = hasLeft ? CAB_DEPTH_MM : 0;
+    const subtractRight = hasRight ? CAB_DEPTH_MM : 0;
+    const avail = wallMm - subtractLeft - subtractRight;
+    return { floor: Math.max(0, avail), wallCab: Math.max(0, avail) };
+  }
+  if (wallKey === "left") {
+    /* Main wall always present when left exists — subtract main wall cab depth from length */
+    const avail = wallMm - CAB_DEPTH_MM;
+    return { floor: Math.max(0, avail), wallCab: Math.max(0, avail) };
+  }
+  if (wallKey === "right") {
+    const avail = wallMm - CAB_DEPTH_MM;
+    return { floor: Math.max(0, avail), wallCab: Math.max(0, avail) };
+  }
+  return { floor: wallMm, wallCab: wallMm };
 }
 
 /* ── Progress Bar Component ── */
@@ -290,7 +318,6 @@ function TopView({ walls, island, layout, options, wallDimensions, islandPos, on
   const rightWallMm = wallDimensions.right || 2500;
   const roomWidthMm = mainWallMm;
   const roomDepthMm = hasLeft ? leftWallMm : hasRight ? rightWallMm : Math.round(mainWallMm * 0.7);
-  const CAB_DEPTH_MM = 600;
 
   /* Scale to fit in SVG viewport */
   const SVG_W = 500;
@@ -367,8 +394,34 @@ function TopView({ walls, island, layout, options, wallDimensions, islandPos, on
   const defaultIx = ROOM_X + ROOM_W / 2;
   const defaultIy = ROOM_Y + ROOM_H / 2;
 
+  /* Corner zone sizes in px */
+  const leftCornerPx = hasLeft ? DEPTH : 0;
+  const rightCornerPx = hasRight ? DEPTH : 0;
+  const mainCornerTopPx = DEPTH; /* main wall always occupies top strip */
+
+  /* Usable strip lengths in px (after subtracting corners) */
+  const mainStripPx = ROOM_W - leftCornerPx - rightCornerPx;
+  const leftStripPx = ROOM_H - mainCornerTopPx;
+  const rightStripPx = ROOM_H - mainCornerTopPx;
+
+  /* Proportional cabinet width: cabinetWidthPx = (cabMm / availMm) * stripPx */
+  const mainAvailMm = mainWallMm - (hasLeft ? CAB_DEPTH_MM : 0) - (hasRight ? CAB_DEPTH_MM : 0);
+  const leftAvailMm = leftWallMm - CAB_DEPTH_MM;
+  const rightAvailMm = rightWallMm - CAB_DEPTH_MM;
+
+  function mmToPxMain(mm) { return mainAvailMm > 0 ? (mm / mainAvailMm) * mainStripPx : 0; }
+  function mmToPxLeft(mm) { return leftAvailMm > 0 ? (mm / leftAvailMm) * leftStripPx : 0; }
+  function mmToPxRight(mm) { return rightAvailMm > 0 ? (mm / rightAvailMm) * rightStripPx : 0; }
+
   return (
     <svg ref={svgRef} width="100%" viewBox={`0 0 ${SVG_W} ${SVG_H}`} style={{ display: "block", background: "#F9F8F6", borderRadius: "12px", touchAction: "none" }}>
+      <defs>
+        <pattern id="corner-hatch" patternUnits="userSpaceOnUse" width="6" height="6" patternTransform="rotate(45)">
+          <rect width="6" height="6" fill="#E8E4DC" />
+          <line x1="0" y1="0" x2="0" y2="6" stroke="#D0CAB8" strokeWidth="1.5" />
+        </pattern>
+      </defs>
+
       {/* Room outline */}
       <rect x={ROOM_X} y={ROOM_Y} width={ROOM_W} height={ROOM_H} fill="#F0EDE6" rx={2} stroke="#D0CAB8" strokeWidth={1} />
 
@@ -376,111 +429,106 @@ function TopView({ walls, island, layout, options, wallDimensions, islandPos, on
       <text x={ROOM_X + ROOM_W / 2} y={ROOM_Y + ROOM_H + 18} textAnchor="middle" fill="#999" fontSize={9} fontFamily="DM Sans,sans-serif">{roomWidthMm} mm</text>
       <text x={ROOM_X - 14} y={ROOM_Y + ROOM_H / 2} textAnchor="middle" fill="#999" fontSize={9} fontFamily="DM Sans,sans-serif" transform={`rotate(-90, ${ROOM_X - 14}, ${ROOM_Y + ROOM_H / 2})`}>{roomDepthMm} mm</text>
 
-      {/* Main wall — base cabinets (full depth, inside room against wall) */}
-      {mainFloor.length > 0 && (() => {
-        let xCur = ROOM_X + 3;
-        return mainFloor.map((m) => {
-          const w = m.width * SCALE;
+      {/* Corner zones (hatched unavailable areas) */}
+      {hasLeft && (
+        <rect x={ROOM_X} y={ROOM_Y} width={DEPTH} height={DEPTH} fill="url(#corner-hatch)" stroke="#D0CAB8" strokeWidth={0.5} />
+      )}
+      {hasRight && (
+        <rect x={ROOM_X + ROOM_W - DEPTH} y={ROOM_Y} width={DEPTH} height={DEPTH} fill="url(#corner-hatch)" stroke="#D0CAB8" strokeWidth={0.5} />
+      )}
+
+      {/* ── Main wall (top edge) ── cabinets start after left corner, end before right corner */}
+      {(() => {
+        const stripX = ROOM_X + leftCornerPx;
+        let xCur = stripX;
+        const floorEls = mainFloor.map((m) => {
+          const w = mmToPxMain(m.width);
           const x = xCur;
-          xCur += w + 3;
+          xCur += w;
           return (
             <g key={m.id}>
-              <rect x={x} y={ROOM_Y + 2} width={w} height={DEPTH - 4} rx={2} fill={cabColor} stroke={m.isSpecial ? "#e74c3c" : strokeColor} strokeWidth={m.isSpecial ? 2 : 1.5} />
-              <text x={x + w / 2} y={ROOM_Y + DEPTH / 2 + 3} textAnchor="middle" fill={isLight ? "#666" : "#ccc"} fontSize={Math.min(8, w * 0.3)} fontFamily="DM Sans,sans-serif">{m.width}</text>
+              <rect x={x} y={ROOM_Y + 1} width={w} height={DEPTH - 2} rx={2} fill={cabColor} stroke={m.isSpecial ? "#e74c3c" : strokeColor} strokeWidth={m.isSpecial ? 2 : 1.5} />
+              <text x={x + w / 2} y={ROOM_Y + DEPTH / 2 + 3} textAnchor="middle" fill={isLight ? "#666" : "#ccc"} fontSize={Math.min(8, w * 0.35)} fontFamily="DM Sans,sans-serif">{m.width}</text>
             </g>
           );
         });
-      })()}
-      {/* Main wall — wall cabinets (thinner strip overlapping base cabs, closest to wall) */}
-      {mainWallCabs.length > 0 && (() => {
-        let xCur = ROOM_X + 3;
-        return mainWallCabs.map((m) => {
-          const w = m.width * SCALE;
-          const x = xCur;
-          xCur += w + 3;
+        let wxCur = stripX;
+        const wallEls = mainWallCabs.map((m) => {
+          const w = mmToPxMain(m.width);
+          const x = wxCur;
+          wxCur += w;
           return (
             <g key={m.id}>
-              <rect x={x} y={ROOM_Y + 2} width={w} height={WALL_CAB_DEPTH - 2} rx={2} fill={wallCabColor} stroke={m.isSpecial ? "#e74c3c" : strokeColor} strokeWidth={1.5} strokeDasharray="4,3" />
-              <text x={x + w / 2} y={ROOM_Y + WALL_CAB_DEPTH / 2 + 2} textAnchor="middle" fill={isLight ? "#555" : "#ddd"} fontSize={Math.min(7, w * 0.25)} fontFamily="DM Sans,sans-serif">{m.width}</text>
+              <rect x={x} y={ROOM_Y + 1} width={w} height={WALL_CAB_DEPTH - 1} rx={2} fill={wallCabColor} stroke={m.isSpecial ? "#e74c3c" : strokeColor} strokeWidth={1.5} strokeDasharray="4,3" />
+              <text x={x + w / 2} y={ROOM_Y + WALL_CAB_DEPTH / 2 + 2} textAnchor="middle" fill={isLight ? "#555" : "#ddd"} fontSize={Math.min(7, w * 0.3)} fontFamily="DM Sans,sans-serif">{m.width}</text>
             </g>
           );
         });
+        return [...floorEls, ...wallEls];
       })()}
       <text x={ROOM_X + ROOM_W / 2} y={ROOM_Y + DEPTH / 2 + 3} textAnchor="middle" fill="#888" fontSize={8} fontFamily="DM Sans,sans-serif" fontWeight="700" opacity={(mainFloor.length + mainWallCabs.length) > 0 ? 0.3 : 0.8}>PERETE PRINCIPAL</text>
 
-      {/* Left wall */}
-      {hasLeft && (
-        <>
-          {/* Base cabs — full depth inside room along left wall */}
-          {(() => {
-            let yCur = ROOM_Y + 3;
-            return leftFloor.map((m) => {
-              const h = m.width * SCALE;
-              const y = yCur;
-              yCur += h + 3;
-              return (
-                <g key={m.id}>
-                  <rect x={ROOM_X + 2} y={y} width={DEPTH - 4} height={h} rx={2} fill={cabColor} stroke={m.isSpecial ? "#e74c3c" : strokeColor} strokeWidth={m.isSpecial ? 2 : 1.5} />
-                  <text x={ROOM_X + DEPTH / 2} y={y + h / 2 + 3} textAnchor="middle" fill={isLight ? "#666" : "#ccc"} fontSize={Math.min(8, h * 0.3)} fontFamily="DM Sans,sans-serif">{m.width}</text>
-                </g>
-              );
-            });
-          })()}
-          {/* Wall cabs — thinner strip overlapping base cabs, closest to left wall */}
-          {(() => {
-            let yCur = ROOM_Y + 3;
-            return leftWallCabs.map((m) => {
-              const h = m.width * SCALE;
-              const y = yCur;
-              yCur += h + 3;
-              return (
-                <g key={m.id}>
-                  <rect x={ROOM_X + 2} y={y} width={WALL_CAB_DEPTH - 2} height={h} rx={2} fill={wallCabColor} stroke={m.isSpecial ? "#e74c3c" : strokeColor} strokeWidth={1.5} strokeDasharray="4,3" />
-                  <text x={ROOM_X + WALL_CAB_DEPTH / 2} y={y + h / 2 + 3} textAnchor="middle" fill={isLight ? "#555" : "#ddd"} fontSize={Math.min(7, h * 0.25)} fontFamily="DM Sans,sans-serif">{m.width}</text>
-                </g>
-              );
-            });
-          })()}
-          <text x={ROOM_X + DEPTH / 2} y={ROOM_Y + ROOM_H / 2} textAnchor="middle" fill="#888" fontSize={7} fontFamily="DM Sans,sans-serif" fontWeight="700" opacity={(leftFloor.length + leftWallCabs.length) > 0 ? 0.3 : 0.8} transform={`rotate(-90, ${ROOM_X + DEPTH / 2}, ${ROOM_Y + ROOM_H / 2})`}>STANGA</text>
-        </>
-      )}
+      {/* ── Left wall (left edge) ── cabinets start below main wall corner */}
+      {hasLeft && (() => {
+        const stripY = ROOM_Y + mainCornerTopPx;
+        let yCur = stripY;
+        const floorEls = leftFloor.map((m) => {
+          const h = mmToPxLeft(m.width);
+          const y = yCur;
+          yCur += h;
+          return (
+            <g key={m.id}>
+              <rect x={ROOM_X + 1} y={y} width={DEPTH - 2} height={h} rx={2} fill={cabColor} stroke={m.isSpecial ? "#e74c3c" : strokeColor} strokeWidth={m.isSpecial ? 2 : 1.5} />
+              <text x={ROOM_X + DEPTH / 2} y={y + h / 2 + 3} textAnchor="middle" fill={isLight ? "#666" : "#ccc"} fontSize={Math.min(8, h * 0.35)} fontFamily="DM Sans,sans-serif">{m.width}</text>
+            </g>
+          );
+        });
+        let wyCur = stripY;
+        const wallEls = leftWallCabs.map((m) => {
+          const h = mmToPxLeft(m.width);
+          const y = wyCur;
+          wyCur += h;
+          return (
+            <g key={m.id}>
+              <rect x={ROOM_X + 1} y={y} width={WALL_CAB_DEPTH - 1} height={h} rx={2} fill={wallCabColor} stroke={m.isSpecial ? "#e74c3c" : strokeColor} strokeWidth={1.5} strokeDasharray="4,3" />
+              <text x={ROOM_X + WALL_CAB_DEPTH / 2} y={y + h / 2 + 3} textAnchor="middle" fill={isLight ? "#555" : "#ddd"} fontSize={Math.min(7, h * 0.3)} fontFamily="DM Sans,sans-serif">{m.width}</text>
+            </g>
+          );
+        });
+        return [...floorEls, ...wallEls];
+      })()}
+      {hasLeft && <text x={ROOM_X + DEPTH / 2} y={ROOM_Y + ROOM_H / 2} textAnchor="middle" fill="#888" fontSize={7} fontFamily="DM Sans,sans-serif" fontWeight="700" opacity={(leftFloor.length + leftWallCabs.length) > 0 ? 0.3 : 0.8} transform={`rotate(-90, ${ROOM_X + DEPTH / 2}, ${ROOM_Y + ROOM_H / 2})`}>STANGA</text>}
 
-      {/* Right wall */}
-      {hasRight && (
-        <>
-          {/* Base cabs — full depth inside room along right wall */}
-          {(() => {
-            let yCur = ROOM_Y + 3;
-            return rightFloor.map((m) => {
-              const h = m.width * SCALE;
-              const y = yCur;
-              yCur += h + 3;
-              return (
-                <g key={m.id}>
-                  <rect x={ROOM_X + ROOM_W - DEPTH + 2} y={y} width={DEPTH - 4} height={h} rx={2} fill={cabColor} stroke={m.isSpecial ? "#e74c3c" : strokeColor} strokeWidth={m.isSpecial ? 2 : 1.5} />
-                  <text x={ROOM_X + ROOM_W - DEPTH / 2} y={y + h / 2 + 3} textAnchor="middle" fill={isLight ? "#666" : "#ccc"} fontSize={Math.min(8, h * 0.3)} fontFamily="DM Sans,sans-serif">{m.width}</text>
-                </g>
-              );
-            });
-          })()}
-          {/* Wall cabs — thinner strip overlapping base cabs, closest to right wall */}
-          {(() => {
-            let yCur = ROOM_Y + 3;
-            return rightWallCabs.map((m) => {
-              const h = m.width * SCALE;
-              const y = yCur;
-              yCur += h + 3;
-              return (
-                <g key={m.id}>
-                  <rect x={ROOM_X + ROOM_W - WALL_CAB_DEPTH} y={y} width={WALL_CAB_DEPTH - 2} height={h} rx={2} fill={wallCabColor} stroke={m.isSpecial ? "#e74c3c" : strokeColor} strokeWidth={1.5} strokeDasharray="4,3" />
-                  <text x={ROOM_X + ROOM_W - WALL_CAB_DEPTH / 2} y={y + h / 2 + 3} textAnchor="middle" fill={isLight ? "#555" : "#ddd"} fontSize={Math.min(7, h * 0.25)} fontFamily="DM Sans,sans-serif">{m.width}</text>
-                </g>
-              );
-            });
-          })()}
-          <text x={ROOM_X + ROOM_W - DEPTH / 2} y={ROOM_Y + ROOM_H / 2} textAnchor="middle" fill="#888" fontSize={7} fontFamily="DM Sans,sans-serif" fontWeight="700" opacity={(rightFloor.length + rightWallCabs.length) > 0 ? 0.3 : 0.8} transform={`rotate(90, ${ROOM_X + ROOM_W - DEPTH / 2}, ${ROOM_Y + ROOM_H / 2})`}>DREAPTA</text>
-        </>
-      )}
+      {/* ── Right wall (right edge) ── cabinets start below main wall corner */}
+      {hasRight && (() => {
+        const stripY = ROOM_Y + mainCornerTopPx;
+        let yCur = stripY;
+        const floorEls = rightFloor.map((m) => {
+          const h = mmToPxRight(m.width);
+          const y = yCur;
+          yCur += h;
+          return (
+            <g key={m.id}>
+              <rect x={ROOM_X + ROOM_W - DEPTH + 1} y={y} width={DEPTH - 2} height={h} rx={2} fill={cabColor} stroke={m.isSpecial ? "#e74c3c" : strokeColor} strokeWidth={m.isSpecial ? 2 : 1.5} />
+              <text x={ROOM_X + ROOM_W - DEPTH / 2} y={y + h / 2 + 3} textAnchor="middle" fill={isLight ? "#666" : "#ccc"} fontSize={Math.min(8, h * 0.35)} fontFamily="DM Sans,sans-serif">{m.width}</text>
+            </g>
+          );
+        });
+        let wyCur = stripY;
+        const wallEls = rightWallCabs.map((m) => {
+          const h = mmToPxRight(m.width);
+          const y = wyCur;
+          wyCur += h;
+          return (
+            <g key={m.id}>
+              <rect x={ROOM_X + ROOM_W - WALL_CAB_DEPTH} y={y} width={WALL_CAB_DEPTH - 1} height={h} rx={2} fill={wallCabColor} stroke={m.isSpecial ? "#e74c3c" : strokeColor} strokeWidth={1.5} strokeDasharray="4,3" />
+              <text x={ROOM_X + ROOM_W - WALL_CAB_DEPTH / 2} y={y + h / 2 + 3} textAnchor="middle" fill={isLight ? "#555" : "#ddd"} fontSize={Math.min(7, h * 0.3)} fontFamily="DM Sans,sans-serif">{m.width}</text>
+            </g>
+          );
+        });
+        return [...floorEls, ...wallEls];
+      })()}
+      {hasRight && <text x={ROOM_X + ROOM_W - DEPTH / 2} y={ROOM_Y + ROOM_H / 2} textAnchor="middle" fill="#888" fontSize={7} fontFamily="DM Sans,sans-serif" fontWeight="700" opacity={(rightFloor.length + rightWallCabs.length) > 0 ? 0.3 : 0.8} transform={`rotate(90, ${ROOM_X + ROOM_W - DEPTH / 2}, ${ROOM_Y + ROOM_H / 2})`}>DREAPTA</text>}
 
       {/* Island (draggable) */}
       {islandModules.map((m, i) => {
@@ -554,10 +602,11 @@ export default function Configurator() {
   const activeLayout = LAYOUTS.find(l => l.id === layout);
   const activeWalls = activeLayout.walls;
 
-  /* Auto-fit walls (apply Corp Special logic) */
+  /* Auto-fit walls (apply Corp Special logic with corner-adjusted available widths) */
   const fittedWalls = {};
   for (const w of activeWalls) {
-    fittedWalls[w] = autoFitWall(walls[w] || [], wallDimensions[w] || 3000);
+    const { floor, wallCab } = getAvailableWidths(w, layout, wallDimensions);
+    fittedWalls[w] = autoFitWall(walls[w] || [], floor, wallCab);
   }
   /* Keep non-active walls as-is */
   for (const w of ["left", "main", "right"]) {
@@ -751,18 +800,23 @@ export default function Configurator() {
                   <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: "24px", fontWeight: 700, marginBottom: "8px" }}>Adauga module</h2>
                   <p style={{ fontSize: "14px", color: "var(--text-muted)", marginBottom: "20px" }}>Selecteaza peretele si adauga corpurile dorite.</p>
 
-                  {/* Wall progress bars — floor and wall cabs tracked separately */}
+                  {/* Wall progress bars — floor and wall cabs tracked separately, with corner adjustment */}
                   <div style={{ marginBottom: "20px" }}>
                     {activeWalls.map(w => {
                       const mods = fittedWalls[w] || [];
-                      const wallMm = wallDimensions[w] || 3000;
+                      const { floor: floorAvail, wallCab: wallCabAvail } = getAvailableWidths(w, layout, wallDimensions);
                       const floorUsed = getUsedWidth(mods.filter(m => FLOOR_TYPES.includes(m.type)));
                       const wallCabUsed = getUsedWidth(mods.filter(m => WALL_CAB_TYPES.includes(m.type)));
+                      const rawMm = wallDimensions[w] || 3000;
+                      const cornerNote = floorAvail < rawMm ? ` (${rawMm}mm - ${rawMm - floorAvail}mm colturi)` : "";
                       return (
                         <div key={w} style={{ marginBottom: "14px" }}>
-                          <div style={{ fontSize: "12px", fontWeight: 700, color: "#444", marginBottom: "6px" }}>{WALL_LABELS[w]}</div>
-                          <ProgressBar label="Corpuri de jos" used={floorUsed} total={wallMm} />
-                          <ProgressBar label="Corpuri de sus" used={wallCabUsed} total={wallMm} />
+                          <div style={{ fontSize: "12px", fontWeight: 700, color: "#444", marginBottom: "2px" }}>
+                            {WALL_LABELS[w]}
+                            {cornerNote && <span style={{ fontSize: "10px", fontWeight: 500, color: "#999" }}>{cornerNote}</span>}
+                          </div>
+                          <ProgressBar label="Corpuri de jos" used={floorUsed} total={floorAvail} />
+                          <ProgressBar label="Corpuri de sus" used={wallCabUsed} total={wallCabAvail} />
                         </div>
                       );
                     })}
@@ -906,7 +960,7 @@ export default function Configurator() {
                         </div>
                         {activeWalls.map(w => fittedWalls[w].length > 0 && (
                           <div key={w} style={{ marginBottom: "10px" }}>
-                            <div style={{ fontSize: "12px", fontWeight: 700, color: "#888", marginBottom: "4px" }}>{WALL_LABELS[w]} ({getUsedWidth(fittedWalls[w])}/{wallDimensions[w]} mm)</div>
+                            <div style={{ fontSize: "12px", fontWeight: 700, color: "#888", marginBottom: "4px" }}>{WALL_LABELS[w]} ({getUsedWidth(fittedWalls[w])}/{getAvailableWidths(w, layout, wallDimensions).floor} mm disponibil)</div>
                             {fittedWalls[w].map(m => {
                               const t = MODULE_TYPES.find(mt => mt.id === m.type);
                               return (
