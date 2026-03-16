@@ -98,13 +98,15 @@ export default function DespreNoi() {
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "20px" }} className="values-grid">
             {VALUES.map((v, i) => (
-              <div key={v.title} className={`fade-up d${(i % 3) + 1} ${valuesInView ? "visible" : ""}`}
+              <div key={v.title} className={`value-card fade-up d${(i % 3) + 1} ${valuesInView ? "visible" : ""}`}
                 style={{ background: "#fff", border: "1px solid #eee", borderRadius: "14px", padding: "30px 24px", transition: "box-shadow 0.25s, transform 0.25s, border-color 0.25s" }}
                 onMouseEnter={e => { e.currentTarget.style.boxShadow = "0 12px 40px rgba(0,0,0,0.08)"; e.currentTarget.style.transform = "translateY(-4px)"; e.currentTarget.style.borderColor = "var(--green)"; }}
                 onMouseLeave={e => { e.currentTarget.style.boxShadow = "none"; e.currentTarget.style.transform = "none"; e.currentTarget.style.borderColor = "#eee"; }}>
-                <div style={{ fontSize: "32px", marginBottom: "14px" }}>{v.icon}</div>
-                <h3 style={{ fontSize: "15px", fontWeight: 700, marginBottom: "10px" }}>{v.title}</h3>
-                <p style={{ fontSize: "13px", lineHeight: 1.7, color: "var(--text-muted)" }}>{v.desc}</p>
+                <div className="value-icon" style={{ fontSize: "32px", marginBottom: "14px" }}>{v.icon}</div>
+                <div>
+                  <h3 style={{ fontSize: "15px", fontWeight: 700, marginBottom: "10px" }}>{v.title}</h3>
+                  <p style={{ fontSize: "13px", lineHeight: 1.7, color: "var(--text-muted)" }}>{v.desc}</p>
+                </div>
               </div>
             ))}
           </div>

@@ -75,7 +75,9 @@ export const GLOBAL_STYLES = `
     .features-grid .feature-card .feature-icon { margin-bottom: 0 !important; flex-shrink: 0; }
     .cta-grid { grid-template-columns: 1fr !important; }
     .checklist-grid { grid-template-columns: 1fr !important; }
-    .values-grid { grid-template-columns: 1fr 1fr !important; }
+    .values-grid { grid-template-columns: 1fr !important; }
+    .values-grid .value-card { flex-direction: row !important; align-items: flex-start !important; gap: 16px !important; display: flex !important; }
+    .values-grid .value-card .value-icon { font-size: 28px !important; margin-bottom: 0 !important; flex-shrink: 0; }
     .why-grid { grid-template-columns: 1fr !important; }
     .config-grid { grid-template-columns: 1fr 1fr !important; }
     .adv-outer { grid-template-columns: 1fr !important; gap: 40px !important; }
