@@ -80,36 +80,48 @@ function calcPrice(walls, island, options) {
 }
 
 /* ── Wall usage helpers ── */
-function getWallUsed(modules) {
+/* Floor modules (base + tall) use horizontal floor space; wall cabs are independent */
+const FLOOR_TYPES = ["base", "tall"];
+const WALL_CAB_TYPES = ["wall"];
+
+function getUsedWidth(modules) {
   return modules.reduce((sum, m) => sum + m.width, 0);
 }
 
-function autoFitModules(modules, wallWidthMm) {
+function autoFitGroup(modules, wallWidthMm) {
   if (wallWidthMm <= 0 || modules.length === 0) return modules;
-  const used = getWallUsed(modules);
+  const used = getUsedWidth(modules);
   if (used <= wallWidthMm) return modules;
   const allButLast = modules.slice(0, -1);
-  const usedBefore = getWallUsed(allButLast);
+  const usedBefore = getUsedWidth(allButLast);
   const remaining = wallWidthMm - usedBefore;
   if (remaining <= 0) return allButLast;
   const last = { ...modules[modules.length - 1], width: remaining, isSpecial: true, label: "Corp Special" };
   return [...allButLast, last];
 }
 
+/* Auto-fit floor modules and wall cab modules separately against the same wall width */
+function autoFitWall(modules, wallWidthMm) {
+  const floorMods = modules.filter(m => FLOOR_TYPES.includes(m.type));
+  const wallMods = modules.filter(m => WALL_CAB_TYPES.includes(m.type));
+  const fittedFloor = autoFitGroup(floorMods, wallWidthMm);
+  const fittedWallCabs = autoFitGroup(wallMods, wallWidthMm);
+  return [...fittedFloor, ...fittedWallCabs];
+}
+
 /* ── Progress Bar Component ── */
-function WallProgressBar({ wallKey, modules, wallWidthMm }) {
-  const used = getWallUsed(modules);
-  const pct = wallWidthMm > 0 ? Math.min((used / wallWidthMm) * 100, 100) : 0;
-  const over = used > wallWidthMm;
+function ProgressBar({ label, used, total }) {
+  const pct = total > 0 ? Math.min((used / total) * 100, 100) : 0;
+  const over = used > total;
   return (
-    <div style={{ marginBottom: "12px" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", fontSize: "11px", fontWeight: 600, marginBottom: "4px" }}>
-        <span style={{ color: "#555" }}>{WALL_LABELS[wallKey]}</span>
-        <span style={{ color: over ? "#e74c3c" : "var(--green)" }}>{used} / {wallWidthMm} mm</span>
+    <div style={{ marginBottom: "6px" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", fontSize: "11px", fontWeight: 600, marginBottom: "3px" }}>
+        <span style={{ color: "#555" }}>{label}</span>
+        <span style={{ color: over ? "#e74c3c" : "var(--green)" }}>{used} / {total} mm</span>
       </div>
-      <div style={{ height: "8px", background: "#eee", borderRadius: "4px", overflow: "hidden" }}>
+      <div style={{ height: "6px", background: "#eee", borderRadius: "3px", overflow: "hidden" }}>
         <div style={{
-          width: `${pct}%`, height: "100%", borderRadius: "4px",
+          width: `${pct}%`, height: "100%", borderRadius: "3px",
           background: over ? "#e74c3c" : pct > 90 ? "#f0ad4e" : "var(--green)",
           transition: "width 0.3s, background 0.3s",
         }} />
@@ -484,7 +496,7 @@ export default function Configurator() {
   /* Auto-fit walls (apply Corp Special logic) */
   const fittedWalls = {};
   for (const w of activeWalls) {
-    fittedWalls[w] = autoFitModules(walls[w] || [], wallDimensions[w] || 3000);
+    fittedWalls[w] = autoFitWall(walls[w] || [], wallDimensions[w] || 3000);
   }
   /* Keep non-active walls as-is */
   for (const w of ["left", "main", "right"]) {
@@ -678,11 +690,21 @@ export default function Configurator() {
                   <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: "24px", fontWeight: 700, marginBottom: "8px" }}>Adauga module</h2>
                   <p style={{ fontSize: "14px", color: "var(--text-muted)", marginBottom: "20px" }}>Selecteaza peretele si adauga corpurile dorite.</p>
 
-                  {/* Wall progress bars */}
+                  {/* Wall progress bars — floor and wall cabs tracked separately */}
                   <div style={{ marginBottom: "20px" }}>
-                    {activeWalls.map(w => (
-                      <WallProgressBar key={w} wallKey={w} modules={fittedWalls[w]} wallWidthMm={wallDimensions[w] || 3000} />
-                    ))}
+                    {activeWalls.map(w => {
+                      const mods = fittedWalls[w] || [];
+                      const wallMm = wallDimensions[w] || 3000;
+                      const floorUsed = getUsedWidth(mods.filter(m => FLOOR_TYPES.includes(m.type)));
+                      const wallCabUsed = getUsedWidth(mods.filter(m => WALL_CAB_TYPES.includes(m.type)));
+                      return (
+                        <div key={w} style={{ marginBottom: "14px" }}>
+                          <div style={{ fontSize: "12px", fontWeight: 700, color: "#444", marginBottom: "6px" }}>{WALL_LABELS[w]}</div>
+                          <ProgressBar label="Corpuri de jos" used={floorUsed} total={wallMm} />
+                          <ProgressBar label="Corpuri de sus" used={wallCabUsed} total={wallMm} />
+                        </div>
+                      );
+                    })}
                   </div>
 
                   <div style={{ display: "flex", gap: "8px", marginBottom: "24px", flexWrap: "wrap" }}>
@@ -823,7 +845,7 @@ export default function Configurator() {
                         </div>
                         {activeWalls.map(w => fittedWalls[w].length > 0 && (
                           <div key={w} style={{ marginBottom: "10px" }}>
-                            <div style={{ fontSize: "12px", fontWeight: 700, color: "#888", marginBottom: "4px" }}>{WALL_LABELS[w]} ({getWallUsed(fittedWalls[w])}/{wallDimensions[w]} mm)</div>
+                            <div style={{ fontSize: "12px", fontWeight: 700, color: "#888", marginBottom: "4px" }}>{WALL_LABELS[w]} ({getUsedWidth(fittedWalls[w])}/{wallDimensions[w]} mm)</div>
                             {fittedWalls[w].map(m => {
                               const t = MODULE_TYPES.find(mt => mt.id === m.type);
                               return (
