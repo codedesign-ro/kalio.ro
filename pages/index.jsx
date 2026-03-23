@@ -1,48 +1,11 @@
 import Layout, { useInView, GreenCTABanner } from "../components/Layout";
+import { Sliders, Shield, Truck, Wrench } from "lucide-react";
 
 const FEATURES = [
-{
-icon: (
-<svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-<path d="M4 28L12 20M28 4L20 12M20 12L12 20M20 12L16 8M12 20L8 24" stroke="#8DC63F" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
-<circle cx="26" cy="6" r="3" stroke="#8DC63F" strokeWidth="2"/>
-<circle cx="6" cy="26" r="3" stroke="#8DC63F" strokeWidth="2"/>
-</svg>
-),
-title: "Personalizare totală",
-desc: "Personalizează mobilierul exact cum dorești. Alege culorile, fronturile, mânerele și multe altele.",
-},
-{
-icon: (
-<svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-<rect x="4" y="8" width="24" height="16" rx="2" stroke="#8DC63F" strokeWidth="2"/>
-<path d="M4 13h24M10 8v4M22 8v4" stroke="#8DC63F" strokeWidth="2" strokeLinecap="round"/>
-<circle cx="16" cy="20" r="2" fill="#8DC63F"/>
-</svg>
-),
-title: "PAL Hidrofugat Premium",
-desc: "Construit din PAL hidrofugat premium, cu spate solid de 8 mm pentru durabilitate sporită.",
-},
-{
-icon: (
-<svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-<circle cx="16" cy="16" r="12" stroke="#8DC63F" strokeWidth="2"/>
-<path d="M16 9v7l4 4" stroke="#8DC63F" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
-</svg>
-),
-title: "Livrare rapidă",
-desc: "Fără luni de așteptare. Mobilierul tău personalizat ajunge la tine rapid și eficient.",
-},
-{
-icon: (
-<svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-<path d="M8 20l4-4 4 4 8-8" stroke="#8DC63F" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
-<rect x="4" y="6" width="24" height="20" rx="3" stroke="#8DC63F" strokeWidth="2"/>
-</svg>
-),
-title: "Asamblare ușoară",
-desc: "Mobilierul Kalio este proiectat pentru asamblare facilă, economisind timp și costuri de instalare.",
-},
+  { icon: Sliders, title: "Personalizare totală", desc: "Personalizează mobilierul exact cum dorești. Alege culorile, fronturile, mânerele și multe altele." },
+  { icon: Shield, title: "PAL Hidrofugat Premium", desc: "Construit din PAL hidrofugat premium, cu spate solid de 8 mm pentru durabilitate sporită." },
+  { icon: Truck, title: "Livrare rapidă", desc: "Fără luni de așteptare. Mobilierul tău personalizat ajunge la tine rapid și eficient." },
+  { icon: Wrench, title: "Asamblare ușoară", desc: "Mobilierul Kalio este proiectat pentru asamblare facilă, economisind timp și costuri de instalare." },
 ];
 
 const CHECKLIST = [
@@ -160,7 +123,9 @@ return (
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "20px" }} className="features-grid">
         {FEATURES.map((f, i) => (
           <div key={f.title} className={`feature-card fade-up d${i + 1} ${featuresInView ? "visible" : ""}`} style={{ display: "flex", flexDirection: "column", gap: "0" }}>
-            <div className="feature-icon" style={{ marginBottom: "16px" }}>{f.icon}</div>
+            <div className="feature-icon" style={{ width: "44px", height: "44px", background: "#f0f9e0", borderRadius: "10px", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "16px", flexShrink: 0 }}>
+              <f.icon size={22} color="#8DC63F" />
+            </div>
             <h3 style={{ fontSize: "15px", fontWeight: 700, marginBottom: "10px" }}>{f.title}</h3>
             <p style={{ fontSize: "13px", lineHeight: 1.7, color: "var(--text-muted)" }}>{f.desc}</p>
           </div>

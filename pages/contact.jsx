@@ -1,19 +1,11 @@
 import { useState } from "react";
 import Layout, { useInView } from "../components/Layout";
+import { MapPin, Mail, Phone, Zap, MessageCircle, FileText } from "lucide-react";
 
 const CONTACT_INFO = [
-  {
-    icon: (<svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M11 2C7.686 2 5 4.686 5 8c0 4.5 6 12 6 12s6-7.5 6-12c0-3.314-2.686-6-6-6z" stroke="#8DC63F" strokeWidth="1.8"/><circle cx="11" cy="8" r="2" stroke="#8DC63F" strokeWidth="1.8"/></svg>),
-    label: "Adresă", value: "Str. Mărului 121, Baia Mare", sub: "România",
-  },
-  {
-    icon: (<svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M4 4h14a2 2 0 012 2v10a2 2 0 01-2 2H4a2 2 0 01-2-2V6a2 2 0 012-2z" stroke="#8DC63F" strokeWidth="1.8"/><path d="M2 6l9 6 9-6" stroke="#8DC63F" strokeWidth="1.8" strokeLinecap="round"/></svg>),
-    label: "Email", value: "contact@kalio.ro", sub: "Răspundem în 24h",
-  },
-  {
-    icon: (<svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M6.6 3A2 2 0 004.7 4.3l-1 2.5a2 2 0 00.4 2.1l2 2a12 12 0 005 5l2 2a2 2 0 002.1.4l2.5-1A2 2 0 0019 15.4v-1.8a1 1 0 00-1-1h-2a1 1 0 00-1 1v.5a8 8 0 01-7-7h.5a1 1 0 001-1v-2a1 1 0 00-1-1H6.6z" stroke="#8DC63F" strokeWidth="1.8" strokeLinejoin="round"/></svg>),
-    label: "Telefon", value: "+40 754 32 43 58", sub: "Luni – Vineri, 9:00 – 18:00",
-  },
+  { icon: MapPin, label: "Adresă", value: "Str. Mărului 121, Baia Mare", sub: "România" },
+  { icon: Mail, label: "Email", value: "contact@kalio.ro", sub: "Răspundem în 24h" },
+  { icon: Phone, label: "Telefon", value: "+40 754 32 43 58", sub: "Luni – Vineri, 9:00 – 18:00" },
 ];
 
 export default function Contact() {
@@ -49,7 +41,7 @@ export default function Contact() {
           {CONTACT_INFO.map((info, i) => (
             <div key={info.label} className={`contact-info-card fade-up d${i + 1} ${heroInView ? "visible" : ""}`}>
               <div style={{ width: "44px", height: "44px", background: "#f0f9e0", borderRadius: "12px", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                {info.icon}
+                <info.icon size={22} color="#8DC63F" />
               </div>
               <div>
                 <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "1px", marginBottom: "4px" }}>{info.label}</div>
@@ -78,12 +70,14 @@ export default function Contact() {
             </p>
             <div className={`fade-up d3 ${formInView ? "visible" : ""}`} style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
               {[
-                { icon: "⚡", title: "Răspuns rapid", desc: "Răspundem în maxim 24 de ore lucrătoare." },
-                { icon: "💬", title: "Consultanță gratuită", desc: "Oferim consultanță gratuită pentru orice proiect." },
-                { icon: "📐", title: "Ofertă personalizată", desc: "Fiecare ofertă este adaptată nevoilor tale specifice." },
+                { icon: Zap, title: "Răspuns rapid", desc: "Răspundem în maxim 24 de ore lucrătoare." },
+                { icon: MessageCircle, title: "Consultanță gratuită", desc: "Oferim consultanță gratuită pentru orice proiect." },
+                { icon: FileText, title: "Ofertă personalizată", desc: "Fiecare ofertă este adaptată nevoilor tale specifice." },
               ].map(item => (
                 <div key={item.title} style={{ display: "flex", gap: "14px", alignItems: "flex-start" }}>
-                  <div style={{ width: "40px", height: "40px", background: "#f0f9e0", borderRadius: "10px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "18px", flexShrink: 0 }}>{item.icon}</div>
+                  <div style={{ width: "40px", height: "40px", background: "#f0f9e0", borderRadius: "10px", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    <item.icon size={20} color="#8DC63F" />
+                  </div>
                   <div>
                     <div style={{ fontSize: "14px", fontWeight: 700, marginBottom: "3px" }}>{item.title}</div>
                     <div style={{ fontSize: "13px", color: "var(--text-muted)", lineHeight: 1.6 }}>{item.desc}</div>
