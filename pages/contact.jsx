@@ -11,6 +11,7 @@ export async function getServerSideProps() {
     items.forEach(item => { content[item.key] = item.value; });
     return { props: { content }};
   } catch (e) {
+    console.error('[contact] PocketBase fetch error:', e?.message || e);
     return { props: { content: {} }};
   }
 }

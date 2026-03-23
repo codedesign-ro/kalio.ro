@@ -31,6 +31,7 @@ export async function getServerSideProps() {
     }));
     return { props: { projects }};
   } catch (e) {
+    console.error('[portofoliu] PocketBase fetch error:', e?.message || e);
     return { props: { projects: [] }};
   }
 }

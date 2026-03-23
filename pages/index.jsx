@@ -24,10 +24,14 @@ export async function getServerSideProps() {
   const pb = new PocketBase(process.env.NEXT_PUBLIC_POCKETBASE_URL || 'https://pb.kalio.ro');
   try {
     const items = await pb.collection('site_content').getFullList({ filter: 'page = "homepage"' });
+    console.log('[homepage] PocketBase returned', items.length, 'records');
+    if (items.length > 0) console.log('[homepage] First record fields:', Object.keys(items[0]).join(', '));
     const content = {};
     items.forEach(item => { content[item.key] = item.value; });
+    console.log('[homepage] Mapped content keys:', Object.keys(content).join(', '));
     return { props: { content }};
   } catch (e) {
+    console.error('[homepage] PocketBase fetch error:', e?.message || e);
     return { props: { content: {} }};
   }
 }
