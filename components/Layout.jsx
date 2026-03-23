@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import Head from "next/head";
 import { useRouter } from "next/router";
+import { Facebook, Instagram } from "lucide-react";
 
 export const GLOBAL_STYLES = `
   @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap');
@@ -87,7 +88,8 @@ export const GLOBAL_STYLES = `
     .portfolio-grid { grid-template-columns: 1fr 1fr !important; grid-auto-rows: 200px !important; }
     .contact-grid { grid-template-columns: 1fr !important; }
     .contact-info-cards { grid-template-columns: 1fr !important; }
-    .footer-grid { grid-template-columns: 1fr !important; gap: 16px !important; text-align: center !important; }
+    .footer-grid { grid-template-columns: 1fr !important; gap: 32px !important; }
+    .footer-bottom { flex-direction: column !important; text-align: center !important; }
     .stats-grid { grid-template-columns: 1fr 1fr !important; }
   }
   @media (min-width: 769px) { .nav-mobile-btn { display: none !important; } }
@@ -171,27 +173,60 @@ export function Navbar() {
 }
 
 export function Footer() {
+  const linkStyle = { display: "block", fontSize: "14px", color: "#555", textDecoration: "none", marginBottom: "10px", transition: "color 0.2s" };
+  const titleStyle = { fontSize: "12px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "1px", color: "#999", marginBottom: "16px" };
+
   return (
-    <footer style={{ background: "#fff", borderTop: "1px solid #eee", padding: "60px 40px 32px" }}>
+    <footer style={{ background: "#fff", borderTop: "1px solid #eee", padding: "80px 40px 32px" }}>
       <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "32px", marginBottom: "48px" }} className="footer-grid">
+        <div style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr 1fr 1fr", gap: "48px" }} className="footer-grid">
+          {/* Brand */}
           <div>
-            <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "1px", marginBottom: "10px" }}>Adresă</div>
-            <div style={{ fontSize: "14px", color: "#333" }}>Str. Mărului 121, Baia Mare</div>
+            <span style={{ fontFamily: "'Playfair Display', serif", fontSize: "24px", fontWeight: 700, color: "#8DC63F" }}>Kalio</span>
+            <p style={{ fontSize: "14px", color: "#888", lineHeight: 1.7, maxWidth: "220px", marginTop: "12px" }}>
+              Mobilier modular personalizabil, de calitate superioară, livrat rapid și ușor de asamblat.
+            </p>
+            <div style={{ display: "flex", gap: "12px", marginTop: "16px" }}>
+              <a href="#" aria-label="Facebook" style={{ color: "#aaa", transition: "color 0.2s" }} onMouseEnter={e => e.currentTarget.style.color = "#8DC63F"} onMouseLeave={e => e.currentTarget.style.color = "#aaa"}>
+                <Facebook size={18} />
+              </a>
+              <a href="#" aria-label="Instagram" style={{ color: "#aaa", transition: "color 0.2s" }} onMouseEnter={e => e.currentTarget.style.color = "#8DC63F"} onMouseLeave={e => e.currentTarget.style.color = "#aaa"}>
+                <Instagram size={18} />
+              </a>
+            </div>
           </div>
+
+          {/* Navigatie */}
           <div>
-            <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "1px", marginBottom: "10px" }}>Email</div>
-            <a href="mailto:contact@kalio.ro" style={{ fontSize: "14px", color: "#333", textDecoration: "none" }}>contact@kalio.ro</a>
+            <div style={titleStyle}>Navigație</div>
+            {[["Acasă", "/"], ["Despre Noi", "/despre-noi"], ["Servicii", "/servicii"], ["Portofoliu", "/portofoliu"], ["Contact", "/contact"]].map(([label, href]) => (
+              <a key={href} href={href} style={linkStyle} onMouseEnter={e => e.currentTarget.style.color = "#8DC63F"} onMouseLeave={e => e.currentTarget.style.color = "#555"}>{label}</a>
+            ))}
           </div>
+
+          {/* Servicii */}
           <div>
-            <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "1px", marginBottom: "10px" }}>Telefon</div>
-            <a href="tel:+40754324358" style={{ fontSize: "14px", color: "#333", textDecoration: "none" }}>+40 754 32 43 58</a>
+            <div style={titleStyle}>Servicii</div>
+            {[["Configurator Bucătărie", "/configurator"], ["Mobilă Modulară", "#"], ["Dressing", "#"], ["Mobilă Living", "#"], ["Consultanță Gratuită", "/contact"]].map(([label, href]) => (
+              <a key={label} href={href} style={linkStyle} onMouseEnter={e => e.currentTarget.style.color = "#8DC63F"} onMouseLeave={e => e.currentTarget.style.color = "#555"}>{label}</a>
+            ))}
+          </div>
+
+          {/* Contact */}
+          <div>
+            <div style={titleStyle}>Contact</div>
+            <div style={{ fontSize: "14px", color: "#555", marginBottom: "10px" }}>Str. Mărului 121, Baia Mare</div>
+            <a href="mailto:contact@kalio.ro" style={linkStyle} onMouseEnter={e => e.currentTarget.style.color = "#8DC63F"} onMouseLeave={e => e.currentTarget.style.color = "#555"}>contact@kalio.ro</a>
+            <a href="tel:+40754324358" style={linkStyle} onMouseEnter={e => e.currentTarget.style.color = "#8DC63F"} onMouseLeave={e => e.currentTarget.style.color = "#555"}>+40 754 32 43 58</a>
+            <div style={{ fontSize: "13px", color: "#aaa", marginTop: "8px" }}>Luni - Vineri: 9:00 - 18:00</div>
           </div>
         </div>
-        <div style={{ borderTop: "1px solid #eee", paddingTop: "28px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "16px" }}>
-          <span style={{ fontFamily: "'Playfair Display', serif", fontSize: "22px", fontWeight: 700, color: "var(--green)" }}>Kalio</span>
-          <p style={{ fontSize: "13px", color: "var(--text-muted)", textAlign: "center" }}>
-            © 2023 kalio.ro | Toate drepturile rezervate Kalio. | Powered and created by codedesign.ro
+
+        {/* Bottom bar */}
+        <div className="footer-bottom" style={{ borderTop: "1px solid #eee", paddingTop: "28px", marginTop: "48px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "16px" }}>
+          <span style={{ fontFamily: "'Playfair Display', serif", fontSize: "20px", fontWeight: 700, color: "#8DC63F" }}>Kalio</span>
+          <p style={{ fontSize: "13px", color: "#aaa" }}>
+            © 2024 kalio.ro | Toate drepturile rezervate Kalio. | Powered and created by codedesign.ro
           </p>
         </div>
       </div>
