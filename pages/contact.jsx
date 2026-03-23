@@ -3,15 +3,15 @@ import PocketBase from "pocketbase";
 import Layout, { useInView } from "../components/Layout";
 import { MapPin, Mail, Phone, Zap, MessageCircle, FileText } from "lucide-react";
 
-export async function getStaticProps() {
+export async function getServerSideProps() {
   const pb = new PocketBase(process.env.NEXT_PUBLIC_POCKETBASE_URL || 'https://pb.kalio.ro');
   try {
     const items = await pb.collection('site_content').getFullList({ filter: 'page = "contact"' });
     const content = {};
     items.forEach(item => { content[item.key] = item.value; });
-    return { props: { content }, revalidate: 10 };
+    return { props: { content }};
   } catch (e) {
-    return { props: { content: {} }, revalidate: 10 };
+    return { props: { content: {} }};
   }
 }
 

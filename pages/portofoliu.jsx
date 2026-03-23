@@ -17,7 +17,7 @@ const FALLBACK_PROJECTS = [
 
 const CATEGORIES = ["Toate", "Bucătărie", "Dressing", "Living"];
 
-export async function getStaticProps() {
+export async function getServerSideProps() {
   const pb = new PocketBase(process.env.NEXT_PUBLIC_POCKETBASE_URL || 'https://pb.kalio.ro');
   try {
     const records = await pb.collection('portfolio').getFullList({ sort: 'order' });
@@ -29,9 +29,9 @@ export async function getStaticProps() {
       img: r.img || "",
       size: r.featured ? "tall" : "normal",
     }));
-    return { props: { projects }, revalidate: 10 };
+    return { props: { projects }};
   } catch (e) {
-    return { props: { projects: [] }, revalidate: 10 };
+    return { props: { projects: [] }};
   }
 }
 

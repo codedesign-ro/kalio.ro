@@ -20,15 +20,15 @@ const DEFAULT_IMAGES = [
   "https://images.unsplash.com/photo-1556909172-54557c7e4fb7?w=900&q=80",
 ];
 
-export async function getStaticProps() {
+export async function getServerSideProps() {
   const pb = new PocketBase(process.env.NEXT_PUBLIC_POCKETBASE_URL || 'https://pb.kalio.ro');
   try {
     const items = await pb.collection('site_content').getFullList({ filter: 'page = "despre-noi"' });
     const content = {};
     items.forEach(item => { content[item.key] = item.value; });
-    return { props: { content }, revalidate: 10 };
+    return { props: { content }};
   } catch (e) {
-    return { props: { content: {} }, revalidate: 10 };
+    return { props: { content: {} }};
   }
 }
 
