@@ -43,7 +43,7 @@ const [ctaRef, ctaInView] = useInView(0.1);
 const badge = get('hero_badge', "Design modular");
 const heroTitle = get('hero_title', "Mobilier modular,");
 const heroHighlight = get('hero_titleHighlight', "reinventat.");
-const heroSubtitle = get('hero_subtitle', "Creează-ți spațiul perfect cu Kalio -- mobilier personalizabil, de calitate superioară, livrat rapid și ușor de asamblat.");
+const heroSubtitle = get('hero_subtitle', "Creează-ți spațiul perfect cu Kalio —mobilier personalizabil, de calitate superioară, livrat rapid și ușor de asamblat.");
 const btnPrimary = get('hero_btnPrimary', "Creează-ți mobila");
 const btnSecondary = get('hero_btnSecondary', "Contact");
 
@@ -60,7 +60,7 @@ const FEATURES = DEFAULT_FEATURES.map((f, i) => ({
 }));
 
 return (
-<Layout title="Kalio -- Mobilier Modular, Reinventat">
+<Layout title="Kalio —Mobilier Modular, Reinventat">
 
 
   {/* HERO */}
@@ -152,7 +152,7 @@ return (
         <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: "clamp(26px, 3vw, 38px)", fontWeight: 700 }}>
           De ce să alegi <span style={{ color: "var(--green)" }}>Kalio?</span>
         </h2>
-        <p style={{ color: "var(--text-muted)", marginTop: "12px", fontSize: "15px" }}>Calitate, viteză și personalizare -- totul într-un singur loc.</p>
+        <p style={{ color: "var(--text-muted)", marginTop: "12px", fontSize: "15px" }}>Calitate, viteză și personalizare —totul într-un singur loc.</p>
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "20px" }} className="features-grid">
         {FEATURES.map((f, i) => (

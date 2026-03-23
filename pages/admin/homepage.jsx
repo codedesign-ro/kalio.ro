@@ -11,25 +11,25 @@ export default function AdminHomepage() {
   const [records, setRecords] = useState({});
 
   const [hero, setHero] = useState({
-    badge: "",
-    title: "",
-    titleHighlight: "",
-    subtitle: "",
-    btnPrimary: "",
-    btnSecondary: "",
+    badge: "Design modular",
+    title: "Mobilier modular,",
+    titleHighlight: "reinventat.",
+    subtitle: "Creaza-ti spatiul perfect cu Kalio - mobilier personalizabil, de calitate superioara, livrat rapid si usor de asamblat.",
+    btnPrimary: "Creaza-ti mobila",
+    btnSecondary: "Contact",
   });
 
   const [stats, setStats] = useState([
-    { value: "", label: "" },
-    { value: "", label: "" },
-    { value: "", label: "" },
+    { value: "500+", label: "Proiecte livrate" },
+    { value: "8mm", label: "Spate solid" },
+    { value: "100%", label: "Personalizabil" },
   ]);
 
   const [features, setFeatures] = useState([
-    { title: "", desc: "" },
-    { title: "", desc: "" },
-    { title: "", desc: "" },
-    { title: "", desc: "" },
+    { title: "Personalizare totala", desc: "Personalizeaza mobilierul exact cum doresti. Alege culorile, fronturile, manerele si multe altele." },
+    { title: "PAL Hidrofugat Premium", desc: "Construit din PAL hidrofugat premium, cu spate solid de 8 mm pentru durabilitate sporita." },
+    { title: "Livrare rapida", desc: "Fara luni de asteptare. Mobilierul tau personalizat ajunge la tine rapid si eficient." },
+    { title: "Asamblare usoara", desc: "Mobilierul Kalio este proiectat pentru asamblare facila, economisind timp si costuri de instalare." },
   ]);
 
   useEffect(() => {

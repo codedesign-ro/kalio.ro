@@ -10,18 +10,28 @@ export default function AdminServicii() {
   const [loading, setLoading] = useState(true);
   const [records, setRecords] = useState({});
 
-  const [hero, setHero] = useState({ title: "", titleHighlight: "", subtitle: "" });
+  const [hero, setHero] = useState({
+    title: "Solutii modulare pentru",
+    titleHighlight: "fiecare spatiu.",
+    subtitle: "Mobilier personalizat, construit pe un sistem modular eficient si flexibil.",
+  });
 
   const [configOptions, setConfigOptions] = useState([
-    { id: 1, label: "" }, { id: 2, label: "" }, { id: 3, label: "" }, { id: 4, label: "" },
-    { id: 5, label: "" }, { id: 6, label: "" }, { id: 7, label: "" }, { id: 8, label: "" },
+    { id: 1, label: "Gama variata de culori moderne" },
+    { id: 2, label: "Fronturi mate, lucioase sau texturate" },
+    { id: 3, label: "Manere si butoni in diferite stiluri" },
+    { id: 4, label: "Sertare standard si sertare tip pan" },
+    { id: 5, label: "Plinte in mai multe variante" },
+    { id: 6, label: "Feronerie Blum (premium) sau medie" },
+    { id: 7, label: "Carcase speciale pentru dimensiuni personalizate" },
+    { id: 8, label: "Adaptabil pentru bucatarie, dressing, living" },
   ]);
 
   const [process, setProcess] = useState([
-    { step: "01", title: "", desc: "" },
-    { step: "02", title: "", desc: "" },
-    { step: "03", title: "", desc: "" },
-    { step: "04", title: "", desc: "" },
+    { step: "01", title: "Configurezi", desc: "Alegi dimensiunile, culorile, fronturile si toate detaliile dorite." },
+    { step: "02", title: "Confirmam", desc: "Echipa Kalio verifica configuratia si te contactam pentru confirmare." },
+    { step: "03", title: "Producem", desc: "Mobilierul tau este produs cu grija in atelierul nostru." },
+    { step: "04", title: "Livram", desc: "Livram rapid la adresa ta, gata pentru asamblare DIY usoara." },
   ]);
 
   useEffect(() => {

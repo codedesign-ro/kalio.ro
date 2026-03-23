@@ -10,17 +10,17 @@ export function AdminContact() {
   const [loading, setLoading] = useState(true);
   const [records, setRecords] = useState({});
   const [contact, setContact] = useState({
-    address: "",
-    city: "",
-    email: "",
-    phone: "",
-    hoursWeekday: "",
-    hoursSaturday: "",
-    hoursSunday: "",
-    mapsUrl: "",
-    heroTitle: "",
-    heroHighlight: "",
-    heroSubtitle: "",
+    address: "Str. Marului 121, Baia Mare",
+    city: "Baia Mare, Romania",
+    email: "contact@kalio.ro",
+    phone: "+40 754 32 43 58",
+    hoursWeekday: "Luni - Vineri: 9:00 - 18:00",
+    hoursSaturday: "Sambata: 9:00 - 14:00",
+    hoursSunday: "Duminica: Inchis",
+    mapsUrl: "https://maps.google.com/?q=Str.+Marului+121+Baia+Mare",
+    heroTitle: "Hai sa discutam despre",
+    heroHighlight: "proiectul tau.",
+    heroSubtitle: "Indiferent daca ai nevoie de informatii despre configurare, livrare sau materiale, echipa Kalio este pregatita sa te ajute.",
   });
 
   useEffect(() => {

@@ -11,25 +11,32 @@ export default function AdminDespreNoi() {
   const [loading, setLoading] = useState(true);
   const [records, setRecords] = useState({});
 
-  const [hero, setHero] = useState({ title: "", titleHighlight: "", subtitle: "" });
+  const [hero, setHero] = useState({
+    title: "Mobilier modular creat pentru",
+    titleHighlight: "libertate si flexibilitate.",
+    subtitle: "La Kalio, construim mobilier care se adapteaza spatiului tau, nu invers. Combinam designul modern cu un sistem modular inteligent.",
+  });
 
   const [mission, setMission] = useState({
-    title: "", titleHighlight: "", text1: "", text2: "",
-    stat1Value: "", stat1Label: "",
-    stat2Value: "", stat2Label: "",
-    stat3Value: "", stat3Label: "",
+    title: "Calitate in",
+    titleHighlight: "fiecare detaliu",
+    text1: "Fiecare corp de mobilier Kalio este realizat din PAL hidrofugat de inalta calitate, cu spate solid de 8 mm pentru rezistenta sporita.",
+    text2: "Kalio ofera echilibrul perfect intre personalizare, eficienta si calitate. Alegi culori, fronturi, manere, sertare si feronerie.",
+    stat1Value: "10+", stat1Label: "Ani experienta",
+    stat2Value: "500+", stat2Label: "Proiecte livrate",
+    stat3Value: "100%", stat3Label: "Personalizabil",
   });
 
   const [uploadingIdx, setUploadingIdx] = useState(null);
   const fileInputRefs = useRef([]);
 
   const [images, setImages] = useState([
-    { id: 1, url: "", label: "Imagine 1 (stanga sus)" },
-    { id: 2, url: "", label: "Imagine 2 (dreapta sus)" },
-    { id: 3, url: "", label: "Imagine 3 (stanga jos)" },
-    { id: 4, url: "", label: "Imagine 4 (dreapta jos)" },
-    { id: 5, url: "", label: "Imagine Hero (mare)" },
-    { id: 6, url: "", label: "Imagine Sectiunea De ce Kalio?" },
+    { id: 1, url: "https://images.unsplash.com/photo-1565538810643-b5bdb714032a?w=600&q=80", label: "Imagine 1 (stanga sus)" },
+    { id: 2, url: "https://images.unsplash.com/photo-1556909172-54557c7e4fb7?w=600&q=80", label: "Imagine 2 (dreapta sus)" },
+    { id: 3, url: "https://images.unsplash.com/photo-1631679706909-1844bbd07221?w=600&q=80", label: "Imagine 3 (stanga jos)" },
+    { id: 4, url: "https://images.unsplash.com/photo-1484101403633-562f891dc89a?w=600&q=80", label: "Imagine 4 (dreapta jos)" },
+    { id: 5, url: "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=900&q=80", label: "Imagine Hero (mare)" },
+    { id: 6, url: "https://images.unsplash.com/photo-1556909172-54557c7e4fb7?w=900&q=80", label: "Imagine Sectiunea De ce Kalio?" },
   ]);
 
   useEffect(() => {
