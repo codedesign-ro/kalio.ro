@@ -1,19 +1,14 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import AdminLayout, { Toast } from "../../components/admin/AdminLayout";
-
-const INITIAL_PROJECTS = [
-  { id: 1, title: "Bucatarie moderna - Baia Mare", category: "Bucatarie", desc: "Bucatarie modulara cu fronturi mate gri antracit si blat de quartz alb.", img: "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=400&q=80", featured: true },
-  { id: 2, title: "Dressing walk-in - Cluj", category: "Dressing", desc: "Dressing personalizat cu iluminare LED si fronturi albe lucioase.", img: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80", featured: false },
-  { id: 3, title: "Bucatarie insula - Oradea", category: "Bucatarie", desc: "Bucatarie cu insula centrala, finisaj lemn natur si negru mat.", img: "https://images.unsplash.com/photo-1565538810643-b5bdb714032a?w=400&q=80", featured: true },
-  { id: 4, title: "Mobilier living - Timisoara", category: "Living", desc: "Set complet living cu nisa TV, biblioteca si comoda cu fronturi texturate.", img: "https://images.unsplash.com/photo-1631679706909-1844bbd07221?w=400&q=80", featured: false },
-];
+import pb from "../../lib/pocketbase";
 
 const CATEGORIES = ["Bucatarie", "Dressing", "Living", "Baie"];
 
 export default function AdminPortofoliu() {
   const router = useRouter();
-  const [projects, setProjects] = useState(INITIAL_PROJECTS);
+  const [projects, setProjects] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState(null);
   const [toast, setToast] = useState(null);
@@ -21,10 +16,24 @@ export default function AdminPortofoliu() {
   const [form, setForm] = useState({ title: "", category: "Bucatarie", desc: "", img: "", featured: false });
 
   useEffect(() => {
-    if (typeof window !== "undefined" && !localStorage.getItem("kalio_admin_auth")) {
+    if (!pb.authStore.isValid) {
       router.push("/admin");
+      return;
     }
+    fetchProjects();
   }, []);
+
+  async function fetchProjects() {
+    setLoading(true);
+    try {
+      const records = await pb.collection('portfolio').getFullList({ sort: 'order' });
+      setProjects(records);
+    } catch (err) {
+      console.error("Error fetching projects:", err);
+      setProjects([]);
+    }
+    setLoading(false);
+  }
 
   function openAdd() {
     setEditing(null);
@@ -38,26 +47,56 @@ export default function AdminPortofoliu() {
     setShowModal(true);
   }
 
-  function handleSave(e) {
+  async function handleSave(e) {
     e.preventDefault();
-    if (editing) {
-      setProjects(prev => prev.map(p => p.id === editing ? { ...p, ...form } : p));
-      setToast({ message: "Proiect actualizat cu succes!", type: "success" });
-    } else {
-      setProjects(prev => [...prev, { id: Date.now(), ...form }]);
-      setToast({ message: "Proiect adaugat cu succes!", type: "success" });
+    try {
+      if (editing) {
+        const updated = await pb.collection('portfolio').update(editing, form);
+        setProjects(prev => prev.map(p => p.id === editing ? updated : p));
+        setToast({ message: "Proiect actualizat cu succes!", type: "success" });
+      } else {
+        const created = await pb.collection('portfolio').create({ ...form, order: projects.length });
+        setProjects(prev => [...prev, created]);
+        setToast({ message: "Proiect adaugat cu succes!", type: "success" });
+      }
+      setShowModal(false);
+    } catch (err) {
+      console.error("Error saving project:", err);
+      setToast({ message: "Eroare la salvare.", type: "error" });
     }
-    setShowModal(false);
   }
 
-  function handleDelete(id) {
-    setProjects(prev => prev.filter(p => p.id !== id));
-    setDeleteConfirm(null);
-    setToast({ message: "Proiect sters.", type: "success" });
+  async function handleDelete(id) {
+    try {
+      await pb.collection('portfolio').delete(id);
+      setProjects(prev => prev.filter(p => p.id !== id));
+      setDeleteConfirm(null);
+      setToast({ message: "Proiect sters.", type: "success" });
+    } catch (err) {
+      console.error("Error deleting project:", err);
+      setToast({ message: "Eroare la stergere.", type: "error" });
+    }
   }
 
-  function toggleFeatured(id) {
-    setProjects(prev => prev.map(p => p.id === id ? { ...p, featured: !p.featured } : p));
+  async function toggleFeatured(id) {
+    const project = projects.find(p => p.id === id);
+    if (!project) return;
+    try {
+      const updated = await pb.collection('portfolio').update(id, { featured: !project.featured });
+      setProjects(prev => prev.map(p => p.id === id ? updated : p));
+    } catch (err) {
+      console.error("Error toggling featured:", err);
+    }
+  }
+
+  if (loading) {
+    return (
+      <AdminLayout title="Portofoliu">
+        <div style={{ textAlign: "center", padding: "60px", color: "#888" }}>
+          <div style={{ fontSize: "16px", fontWeight: 600 }}>Se incarca proiectele...</div>
+        </div>
+      </AdminLayout>
+    );
   }
 
   return (

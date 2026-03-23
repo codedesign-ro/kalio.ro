@@ -2,33 +2,83 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import AdminLayout, { Toast } from "../../components/admin/AdminLayout";
+import pb from "../../lib/pocketbase";
 
 export function AdminContact() {
   const router = useRouter();
   const [toast, setToast] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [records, setRecords] = useState({});
   const [contact, setContact] = useState({
-    address: "Str. Marului 121, Baia Mare",
-    city: "Baia Mare, Romania",
-    email: "contact@kalio.ro",
-    phone: "+40 754 32 43 58",
-    hoursWeekday: "Luni - Vineri: 9:00 - 18:00",
-    hoursSaturday: "Sambata: 9:00 - 14:00",
-    hoursSunday: "Duminica: Inchis",
-    mapsUrl: "https://maps.google.com/?q=Str.+Marului+121+Baia+Mare",
-    heroTitle: "Hai sa discutam despre",
-    heroHighlight: "proiectul tau.",
-    heroSubtitle: "Indiferent daca ai nevoie de informatii despre configurare, livrare sau materiale, echipa Kalio este pregatita sa te ajute.",
+    address: "",
+    city: "",
+    email: "",
+    phone: "",
+    hoursWeekday: "",
+    hoursSaturday: "",
+    hoursSunday: "",
+    mapsUrl: "",
+    heroTitle: "",
+    heroHighlight: "",
+    heroSubtitle: "",
   });
 
   useEffect(() => {
-    if (typeof window !== "undefined" && !localStorage.getItem("kalio_admin_auth")) {
+    if (!pb.authStore.isValid) {
       router.push("/admin");
+      return;
     }
+    fetchContent();
   }, []);
 
-  function handleSave(e) {
+  async function fetchContent() {
+    setLoading(true);
+    try {
+      const items = await pb.collection('site_content').getFullList({
+        filter: 'page = "contact"'
+      });
+      const map = {};
+      const data = { ...contact };
+      for (const item of items) {
+        map[item.key] = item;
+        if (item.key in data) {
+          data[item.key] = item.value;
+        }
+      }
+      setRecords(map);
+      setContact(data);
+    } catch (err) {
+      console.error("Error fetching contact content:", err);
+    }
+    setLoading(false);
+  }
+
+  async function handleSave(e) {
     e.preventDefault();
-    setToast({ message: "Date de contact salvate!", type: "success" });
+    try {
+      for (const [key, value] of Object.entries(contact)) {
+        if (records[key]) {
+          await pb.collection('site_content').update(records[key].id, { value });
+        } else {
+          const created = await pb.collection('site_content').create({ page: 'contact', key, value });
+          setRecords(prev => ({ ...prev, [key]: created }));
+        }
+      }
+      setToast({ message: "Date de contact salvate!", type: "success" });
+    } catch (err) {
+      console.error("Error saving contact:", err);
+      setToast({ message: "Eroare la salvare.", type: "error" });
+    }
+  }
+
+  if (loading) {
+    return (
+      <AdminLayout title="Contact">
+        <div style={{ textAlign: "center", padding: "60px", color: "#888" }}>
+          <div style={{ fontSize: "16px", fontWeight: 600 }}>Se incarca...</div>
+        </div>
+      </AdminLayout>
+    );
   }
 
   return (

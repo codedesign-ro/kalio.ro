@@ -1,52 +1,150 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import AdminLayout, { Toast } from "../../components/admin/AdminLayout";
+import pb from "../../lib/pocketbase";
 
 export default function AdminDespreNoi() {
   const router = useRouter();
   const [toast, setToast] = useState(null);
   const [activeTab, setActiveTab] = useState("hero");
+  const [loading, setLoading] = useState(true);
+  const [records, setRecords] = useState({});
 
-  const [hero, setHero] = useState({
-    title: "Mobilier modular creat pentru",
-    titleHighlight: "libertate si flexibilitate.",
-    subtitle: "La Kalio, construim mobilier care se adapteaza spatiului tau, nu invers. Combinam designul modern cu un sistem modular inteligent.",
-  });
+  const [hero, setHero] = useState({ title: "", titleHighlight: "", subtitle: "" });
 
   const [mission, setMission] = useState({
-    title: "Calitate in",
-    titleHighlight: "fiecare detaliu",
-    text1: "Fiecare corp de mobilier Kalio este realizat din PAL hidrofugat de inalta calitate, cu spate solid de 8 mm pentru rezistenta sporita.",
-    text2: "Kalio ofera echilibrul perfect intre personalizare, eficienta si calitate. Alegi culori, fronturi, manere, sertare si feronerie.",
-    stat1Value: "10+", stat1Label: "Ani experienta",
-    stat2Value: "500+", stat2Label: "Proiecte livrate",
-    stat3Value: "100%", stat3Label: "Personalizabil",
+    title: "", titleHighlight: "", text1: "", text2: "",
+    stat1Value: "", stat1Label: "",
+    stat2Value: "", stat2Label: "",
+    stat3Value: "", stat3Label: "",
   });
 
   const [images, setImages] = useState([
-    { id: 1, url: "https://images.unsplash.com/photo-1565538810643-b5bdb714032a?w=600&q=80", label: "Imagine 1 (stanga sus)" },
-    { id: 2, url: "https://images.unsplash.com/photo-1556909172-54557c7e4fb7?w=600&q=80", label: "Imagine 2 (dreapta sus)" },
-    { id: 3, url: "https://images.unsplash.com/photo-1631679706909-1844bbd07221?w=600&q=80", label: "Imagine 3 (stanga jos)" },
-    { id: 4, url: "https://images.unsplash.com/photo-1484101403633-562f891dc89a?w=600&q=80", label: "Imagine 4 (dreapta jos)" },
-    { id: 5, url: "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=900&q=80", label: "Imagine Hero (mare)" },
-    { id: 6, url: "https://images.unsplash.com/photo-1556909172-54557c7e4fb7?w=900&q=80", label: "Imagine Sectiunea De ce Kalio?" },
+    { id: 1, url: "", label: "Imagine 1 (stanga sus)" },
+    { id: 2, url: "", label: "Imagine 2 (dreapta sus)" },
+    { id: 3, url: "", label: "Imagine 3 (stanga jos)" },
+    { id: 4, url: "", label: "Imagine 4 (dreapta jos)" },
+    { id: 5, url: "", label: "Imagine Hero (mare)" },
+    { id: 6, url: "", label: "Imagine Sectiunea De ce Kalio?" },
   ]);
 
   useEffect(() => {
-    if (typeof window !== "undefined" && !localStorage.getItem("kalio_admin_auth")) {
+    if (!pb.authStore.isValid) {
       router.push("/admin");
+      return;
     }
+    fetchContent();
   }, []);
 
-  function saveHero(e) { e.preventDefault(); setToast({ message: "Hero salvat!", type: "success" }); }
-  function saveMission(e) { e.preventDefault(); setToast({ message: "Sectiunea misiune salvata!", type: "success" }); }
-  function saveImages(e) { e.preventDefault(); setToast({ message: "Imagini actualizate!", type: "success" }); }
+  async function fetchContent() {
+    setLoading(true);
+    try {
+      const items = await pb.collection('site_content').getFullList({
+        filter: 'page = "despre-noi"'
+      });
+      const map = {};
+      for (const item of items) {
+        map[item.key] = item;
+      }
+      setRecords(map);
+
+      if (Object.keys(map).length > 0) {
+        setHero({
+          title: map.hero_title?.value || "",
+          titleHighlight: map.hero_titleHighlight?.value || "",
+          subtitle: map.hero_subtitle?.value || "",
+        });
+        setMission({
+          title: map.mission_title?.value || "",
+          titleHighlight: map.mission_titleHighlight?.value || "",
+          text1: map.mission_text1?.value || "",
+          text2: map.mission_text2?.value || "",
+          stat1Value: map.mission_stat1Value?.value || "",
+          stat1Label: map.mission_stat1Label?.value || "",
+          stat2Value: map.mission_stat2Value?.value || "",
+          stat2Label: map.mission_stat2Label?.value || "",
+          stat3Value: map.mission_stat3Value?.value || "",
+          stat3Label: map.mission_stat3Label?.value || "",
+        });
+        setImages(prev => prev.map((img, i) => ({
+          ...img,
+          url: map[`image_${i}`]?.value || "",
+        })));
+      }
+    } catch (err) {
+      console.error("Error fetching despre-noi content:", err);
+    }
+    setLoading(false);
+  }
+
+  async function saveField(key, value) {
+    if (records[key]) {
+      const updated = await pb.collection('site_content').update(records[key].id, { value });
+      setRecords(prev => ({ ...prev, [key]: updated }));
+    } else {
+      const created = await pb.collection('site_content').create({ page: 'despre-noi', key, value });
+      setRecords(prev => ({ ...prev, [key]: created }));
+    }
+  }
+
+  async function saveHero(e) {
+    e.preventDefault();
+    try {
+      await saveField('hero_title', hero.title);
+      await saveField('hero_titleHighlight', hero.titleHighlight);
+      await saveField('hero_subtitle', hero.subtitle);
+      setToast({ message: "Hero salvat!", type: "success" });
+    } catch (err) {
+      setToast({ message: "Eroare la salvare.", type: "error" });
+    }
+  }
+
+  async function saveMission(e) {
+    e.preventDefault();
+    try {
+      await saveField('mission_title', mission.title);
+      await saveField('mission_titleHighlight', mission.titleHighlight);
+      await saveField('mission_text1', mission.text1);
+      await saveField('mission_text2', mission.text2);
+      await saveField('mission_stat1Value', mission.stat1Value);
+      await saveField('mission_stat1Label', mission.stat1Label);
+      await saveField('mission_stat2Value', mission.stat2Value);
+      await saveField('mission_stat2Label', mission.stat2Label);
+      await saveField('mission_stat3Value', mission.stat3Value);
+      await saveField('mission_stat3Label', mission.stat3Label);
+      setToast({ message: "Sectiunea misiune salvata!", type: "success" });
+    } catch (err) {
+      setToast({ message: "Eroare la salvare.", type: "error" });
+    }
+  }
+
+  async function saveImages(e) {
+    e.preventDefault();
+    try {
+      for (let i = 0; i < images.length; i++) {
+        await saveField(`image_${i}`, images[i].url);
+      }
+      setToast({ message: "Imagini actualizate!", type: "success" });
+    } catch (err) {
+      setToast({ message: "Eroare la salvare.", type: "error" });
+    }
+  }
 
   const TABS = [
     { id: "hero", label: "Hero" },
     { id: "mission", label: "Misiune" },
     { id: "images", label: "Imagini" },
   ];
+
+  if (loading) {
+    return (
+      <AdminLayout title="Despre Noi">
+        <div style={{ textAlign: "center", padding: "60px", color: "#888" }}>
+          <div style={{ fontSize: "16px", fontWeight: 600 }}>Se incarca...</div>
+        </div>
+      </AdminLayout>
+    );
+  }
 
   return (
     <AdminLayout title="Despre Noi">
@@ -153,7 +251,7 @@ export default function AdminDespreNoi() {
               {images.map((img, i) => (
                 <div key={img.id} style={{ background: "#f5f5f3", borderRadius: "12px", padding: "16px", display: "grid", gridTemplateColumns: "120px 1fr", gap: "16px", alignItems: "center" }}>
                   <div style={{ height: "80px", borderRadius: "8px", overflow: "hidden", background: "#eee" }}>
-                    <img src={img.url} alt={img.label} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                    {img.url && <img src={img.url} alt={img.label} style={{ width: "100%", height: "100%", objectFit: "cover" }} />}
                   </div>
                   <div>
                     <label className="admin-label" style={{ marginBottom: "8px" }}>{img.label}</label>

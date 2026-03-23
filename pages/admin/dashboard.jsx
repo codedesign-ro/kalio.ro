@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/router";
 import AdminLayout from "../../components/admin/AdminLayout";
+import pb from "../../lib/pocketbase";
 
 const STATS = [
   { label: "Proiecte Portofoliu", value: "12", change: "+2 luna aceasta", icon: "image", color: "#8DC63F" },
@@ -27,7 +28,7 @@ export default function Dashboard() {
   const router = useRouter();
 
   useEffect(() => {
-    if (typeof window !== "undefined" && !localStorage.getItem("kalio_admin_auth")) {
+    if (!pb.authStore.isValid) {
       router.push("/admin");
     }
   }, []);

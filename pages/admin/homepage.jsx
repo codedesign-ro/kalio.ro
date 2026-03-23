@@ -1,53 +1,136 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import AdminLayout, { Toast } from "../../components/admin/AdminLayout";
+import pb from "../../lib/pocketbase";
 
 export default function AdminHomepage() {
   const router = useRouter();
   const [toast, setToast] = useState(null);
   const [activeTab, setActiveTab] = useState("hero");
+  const [loading, setLoading] = useState(true);
+  const [records, setRecords] = useState({});
 
   const [hero, setHero] = useState({
-    badge: "Design modular",
-    title: "Mobilier modular,",
-    titleHighlight: "reinventat.",
-    subtitle: "Creaza-ti spatiul perfect cu Kalio - mobilier personalizabil, de calitate superioara, livrat rapid si usor de asamblat.",
-    btnPrimary: "Creaza-ti mobila",
-    btnSecondary: "Contact",
+    badge: "",
+    title: "",
+    titleHighlight: "",
+    subtitle: "",
+    btnPrimary: "",
+    btnSecondary: "",
   });
 
   const [stats, setStats] = useState([
-    { value: "500+", label: "Proiecte livrate" },
-    { value: "8mm", label: "Spate solid" },
-    { value: "100%", label: "Personalizabil" },
+    { value: "", label: "" },
+    { value: "", label: "" },
+    { value: "", label: "" },
   ]);
 
   const [features, setFeatures] = useState([
-    { title: "Personalizare totala", desc: "Personalizeaza mobilierul exact cum doresti. Alege culorile, fronturile, manerele si multe altele." },
-    { title: "PAL Hidrofugat Premium", desc: "Construit din PAL hidrofugat premium, cu spate solid de 8 mm pentru durabilitate sporita." },
-    { title: "Livrare rapida", desc: "Fara luni de asteptare. Mobilierul tau personalizat ajunge la tine rapid si eficient." },
-    { title: "Asamblare usoara", desc: "Mobilierul Kalio este proiectat pentru asamblare facila, economisind timp si costuri de instalare." },
+    { title: "", desc: "" },
+    { title: "", desc: "" },
+    { title: "", desc: "" },
+    { title: "", desc: "" },
   ]);
 
   useEffect(() => {
-    if (typeof window !== "undefined" && !localStorage.getItem("kalio_admin_auth")) {
+    if (!pb.authStore.isValid) {
       router.push("/admin");
+      return;
     }
+    fetchContent();
   }, []);
 
-  function saveHero(e) {
-    e.preventDefault();
-    setToast({ message: "Hero section salvata!", type: "success" });
+  async function fetchContent() {
+    setLoading(true);
+    try {
+      const items = await pb.collection('site_content').getFullList({
+        filter: 'page = "homepage"'
+      });
+      const map = {};
+      for (const item of items) {
+        map[item.key] = item;
+      }
+      setRecords(map);
+
+      if (Object.keys(map).length > 0) {
+        setHero({
+          badge: map.hero_badge?.value || "",
+          title: map.hero_title?.value || "",
+          titleHighlight: map.hero_titleHighlight?.value || "",
+          subtitle: map.hero_subtitle?.value || "",
+          btnPrimary: map.hero_btnPrimary?.value || "",
+          btnSecondary: map.hero_btnSecondary?.value || "",
+        });
+        setStats([
+          { value: map.stat_0_value?.value || "", label: map.stat_0_label?.value || "" },
+          { value: map.stat_1_value?.value || "", label: map.stat_1_label?.value || "" },
+          { value: map.stat_2_value?.value || "", label: map.stat_2_label?.value || "" },
+        ]);
+        setFeatures([
+          { title: map.feature_0_title?.value || "", desc: map.feature_0_desc?.value || "" },
+          { title: map.feature_1_title?.value || "", desc: map.feature_1_desc?.value || "" },
+          { title: map.feature_2_title?.value || "", desc: map.feature_2_desc?.value || "" },
+          { title: map.feature_3_title?.value || "", desc: map.feature_3_desc?.value || "" },
+        ]);
+      }
+    } catch (err) {
+      console.error("Error fetching homepage content:", err);
+    }
+    setLoading(false);
   }
 
-  function saveStats(e) {
-    e.preventDefault();
-    setToast({ message: "Statistici salvate!", type: "success" });
+  async function saveField(key, value) {
+    if (records[key]) {
+      const updated = await pb.collection('site_content').update(records[key].id, { value });
+      setRecords(prev => ({ ...prev, [key]: updated }));
+    } else {
+      const created = await pb.collection('site_content').create({ page: 'homepage', key, value });
+      setRecords(prev => ({ ...prev, [key]: created }));
+    }
   }
 
-  function saveFeatures(e) {
+  async function saveHero(e) {
     e.preventDefault();
-    setToast({ message: "Features salvate!", type: "success" });
+    try {
+      await saveField('hero_badge', hero.badge);
+      await saveField('hero_title', hero.title);
+      await saveField('hero_titleHighlight', hero.titleHighlight);
+      await saveField('hero_subtitle', hero.subtitle);
+      await saveField('hero_btnPrimary', hero.btnPrimary);
+      await saveField('hero_btnSecondary', hero.btnSecondary);
+      setToast({ message: "Hero section salvata!", type: "success" });
+    } catch (err) {
+      console.error("Error saving hero:", err);
+      setToast({ message: "Eroare la salvare.", type: "error" });
+    }
+  }
+
+  async function saveStats(e) {
+    e.preventDefault();
+    try {
+      for (let i = 0; i < stats.length; i++) {
+        await saveField(`stat_${i}_value`, stats[i].value);
+        await saveField(`stat_${i}_label`, stats[i].label);
+      }
+      setToast({ message: "Statistici salvate!", type: "success" });
+    } catch (err) {
+      console.error("Error saving stats:", err);
+      setToast({ message: "Eroare la salvare.", type: "error" });
+    }
+  }
+
+  async function saveFeatures(e) {
+    e.preventDefault();
+    try {
+      for (let i = 0; i < features.length; i++) {
+        await saveField(`feature_${i}_title`, features[i].title);
+        await saveField(`feature_${i}_desc`, features[i].desc);
+      }
+      setToast({ message: "Features salvate!", type: "success" });
+    } catch (err) {
+      console.error("Error saving features:", err);
+      setToast({ message: "Eroare la salvare.", type: "error" });
+    }
   }
 
   const TABS = [
@@ -55,6 +138,16 @@ export default function AdminHomepage() {
     { id: "stats", label: "Statistici" },
     { id: "features", label: "Feature Cards" },
   ];
+
+  if (loading) {
+    return (
+      <AdminLayout title="Homepage">
+        <div style={{ textAlign: "center", padding: "60px", color: "#888" }}>
+          <div style={{ fontSize: "16px", fontWeight: 600 }}>Se incarca...</div>
+        </div>
+      </AdminLayout>
+    );
+  }
 
   return (
     <AdminLayout title="Homepage">

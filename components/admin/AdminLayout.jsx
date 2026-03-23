@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
+import pb from "../../lib/pocketbase";
 
 const NAV_ITEMS = [
   { href: "/admin/dashboard", label: "Dashboard", icon: "grid" },
@@ -96,10 +97,8 @@ export default function AdminLayout({ children, title = "Admin" }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   function handleLogout() {
-    if (typeof window !== "undefined") {
-      localStorage.removeItem("kalio_admin_auth");
-      router.push("/admin");
-    }
+    pb.authStore.clear();
+    router.push("/admin");
   }
 
   return (

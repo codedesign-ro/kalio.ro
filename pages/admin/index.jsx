@@ -1,8 +1,7 @@
 import { useState } from "react";
 import { useRouter } from "next/router";
 import Head from "next/head";
-
-const ADMIN_PASSWORD = "kalio2024";
+import pb from "../../lib/pocketbase";
 
 export default function AdminLogin() {
   const router = useRouter();
@@ -12,21 +11,17 @@ export default function AdminLogin() {
   const [loading, setLoading] = useState(false);
   const [showPass, setShowPass] = useState(false);
 
-  function handleLogin(e) {
+  async function handleLogin(e) {
     e.preventDefault();
     setLoading(true);
     setError("");
-    setTimeout(() => {
-      if (email === "admin@kalio.ro" && password === ADMIN_PASSWORD) {
-        if (typeof window !== "undefined") {
-          localStorage.setItem("kalio_admin_auth", "true");
-        }
-        router.push("/admin/dashboard");
-      } else {
-        setError("Email sau parola incorecta.");
-        setLoading(false);
-      }
-    }, 600);
+    try {
+      await pb.admins.authWithPassword(email, password);
+      router.push("/admin/dashboard");
+    } catch (err) {
+      setError("Email sau parola incorecta.");
+      setLoading(false);
+    }
   }
 
   return (

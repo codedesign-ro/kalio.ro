@@ -1,8 +1,9 @@
 import { useState } from "react";
+import PocketBase from "pocketbase";
 import Layout, { useInView, GreenCTABanner } from "../components/Layout";
 import { Briefcase, Heart, Award, Clock } from "lucide-react";
 
-const PROJECTS = [
+const FALLBACK_PROJECTS = [
   { id: 1, category: "Bucătărie", title: "Bucătărie modernă - Baia Mare", desc: "Bucătărie modulară cu fronturi mate gri antracit și blat de quartz alb.", img: "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&q=80", size: "tall" },
   { id: 2, category: "Dressing", title: "Dressing walk-in - Cluj", desc: "Dressing personalizat cu iluminare LED și fronturi albe lucioase.", img: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=80", size: "normal" },
   { id: 3, category: "Bucătărie", title: "Bucătărie insulă - Oradea", desc: "Bucătărie cu insulă centrală, finisaj lemn natur și negru mat.", img: "https://images.unsplash.com/photo-1565538810643-b5bdb714032a?w=800&q=80", size: "normal" },
@@ -16,12 +17,31 @@ const PROJECTS = [
 
 const CATEGORIES = ["Toate", "Bucătărie", "Dressing", "Living"];
 
-export default function Portofoliu() {
+export async function getStaticProps() {
+  const pb = new PocketBase(process.env.NEXT_PUBLIC_POCKETBASE_URL || 'https://pb.kalio.ro');
+  try {
+    const records = await pb.collection('portfolio').getFullList({ sort: 'order' });
+    const projects = records.map(r => ({
+      id: r.id,
+      category: r.category || "",
+      title: r.title || "",
+      desc: r.desc || "",
+      img: r.img || "",
+      size: r.featured ? "tall" : "normal",
+    }));
+    return { props: { projects }, revalidate: 60 };
+  } catch (e) {
+    return { props: { projects: [] }, revalidate: 60 };
+  }
+}
+
+export default function Portofoliu({ projects }) {
+  const displayProjects = projects && projects.length > 0 ? projects : FALLBACK_PROJECTS;
   const [activeFilter, setActiveFilter] = useState("Toate");
   const [heroRef, heroInView] = useInView(0.1);
   const [gridRef, gridInView] = useInView(0.05);
 
-  const filtered = activeFilter === "Toate" ? PROJECTS : PROJECTS.filter(p => p.category === activeFilter);
+  const filtered = activeFilter === "Toate" ? displayProjects : displayProjects.filter(p => p.category === activeFilter);
 
   return (
     <Layout title="Portofoliu — Kalio Mobilier Modular">

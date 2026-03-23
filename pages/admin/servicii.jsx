@@ -1,51 +1,133 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import AdminLayout, { Toast } from "../../components/admin/AdminLayout";
+import pb from "../../lib/pocketbase";
 
 export default function AdminServicii() {
   const router = useRouter();
   const [toast, setToast] = useState(null);
   const [activeTab, setActiveTab] = useState("hero");
+  const [loading, setLoading] = useState(true);
+  const [records, setRecords] = useState({});
 
-  const [hero, setHero] = useState({
-    title: "Solutii modulare pentru",
-    titleHighlight: "fiecare spatiu.",
-    subtitle: "Mobilier personalizat, construit pe un sistem modular eficient si flexibil.",
-  });
+  const [hero, setHero] = useState({ title: "", titleHighlight: "", subtitle: "" });
 
   const [configOptions, setConfigOptions] = useState([
-    { id: 1, label: "Gama variata de culori moderne" },
-    { id: 2, label: "Fronturi mate, lucioase sau texturate" },
-    { id: 3, label: "Manere si butoni in diferite stiluri" },
-    { id: 4, label: "Sertare standard si sertare tip pan" },
-    { id: 5, label: "Plinte in mai multe variante" },
-    { id: 6, label: "Feronerie Blum (premium) sau medie" },
-    { id: 7, label: "Carcase speciale pentru dimensiuni personalizate" },
-    { id: 8, label: "Adaptabil pentru bucatarie, dressing, living" },
+    { id: 1, label: "" }, { id: 2, label: "" }, { id: 3, label: "" }, { id: 4, label: "" },
+    { id: 5, label: "" }, { id: 6, label: "" }, { id: 7, label: "" }, { id: 8, label: "" },
   ]);
 
   const [process, setProcess] = useState([
-    { step: "01", title: "Configurezi", desc: "Alegi dimensiunile, culorile, fronturile si toate detaliile dorite." },
-    { step: "02", title: "Confirmam", desc: "Echipa Kalio verifica configuratia si te contactam pentru confirmare." },
-    { step: "03", title: "Producem", desc: "Mobilierul tau este produs cu grija in atelierul nostru." },
-    { step: "04", title: "Livram", desc: "Livram rapid la adresa ta, gata pentru asamblare DIY usoara." },
+    { step: "01", title: "", desc: "" },
+    { step: "02", title: "", desc: "" },
+    { step: "03", title: "", desc: "" },
+    { step: "04", title: "", desc: "" },
   ]);
 
   useEffect(() => {
-    if (typeof window !== "undefined" && !localStorage.getItem("kalio_admin_auth")) {
+    if (!pb.authStore.isValid) {
       router.push("/admin");
+      return;
     }
+    fetchContent();
   }, []);
 
-  function saveHero(e) { e.preventDefault(); setToast({ message: "Hero salvat!", type: "success" }); }
-  function saveConfig(e) { e.preventDefault(); setToast({ message: "Optiuni configurare salvate!", type: "success" }); }
-  function saveProcess(e) { e.preventDefault(); setToast({ message: "Pasi proces salvati!", type: "success" }); }
+  async function fetchContent() {
+    setLoading(true);
+    try {
+      const items = await pb.collection('site_content').getFullList({
+        filter: 'page = "servicii"'
+      });
+      const map = {};
+      for (const item of items) {
+        map[item.key] = item;
+      }
+      setRecords(map);
+
+      if (Object.keys(map).length > 0) {
+        setHero({
+          title: map.hero_title?.value || "",
+          titleHighlight: map.hero_titleHighlight?.value || "",
+          subtitle: map.hero_subtitle?.value || "",
+        });
+        setConfigOptions(prev => prev.map((opt, i) => ({
+          ...opt,
+          label: map[`config_${i}`]?.value || "",
+        })));
+        setProcess(prev => prev.map((s, i) => ({
+          ...s,
+          title: map[`process_${i}_title`]?.value || "",
+          desc: map[`process_${i}_desc`]?.value || "",
+        })));
+      }
+    } catch (err) {
+      console.error("Error fetching servicii content:", err);
+    }
+    setLoading(false);
+  }
+
+  async function saveField(key, value) {
+    if (records[key]) {
+      const updated = await pb.collection('site_content').update(records[key].id, { value });
+      setRecords(prev => ({ ...prev, [key]: updated }));
+    } else {
+      const created = await pb.collection('site_content').create({ page: 'servicii', key, value });
+      setRecords(prev => ({ ...prev, [key]: created }));
+    }
+  }
+
+  async function saveHero(e) {
+    e.preventDefault();
+    try {
+      await saveField('hero_title', hero.title);
+      await saveField('hero_titleHighlight', hero.titleHighlight);
+      await saveField('hero_subtitle', hero.subtitle);
+      setToast({ message: "Hero salvat!", type: "success" });
+    } catch (err) {
+      setToast({ message: "Eroare la salvare.", type: "error" });
+    }
+  }
+
+  async function saveConfig(e) {
+    e.preventDefault();
+    try {
+      for (let i = 0; i < configOptions.length; i++) {
+        await saveField(`config_${i}`, configOptions[i].label);
+      }
+      setToast({ message: "Optiuni configurare salvate!", type: "success" });
+    } catch (err) {
+      setToast({ message: "Eroare la salvare.", type: "error" });
+    }
+  }
+
+  async function saveProcess(e) {
+    e.preventDefault();
+    try {
+      for (let i = 0; i < process.length; i++) {
+        await saveField(`process_${i}_title`, process[i].title);
+        await saveField(`process_${i}_desc`, process[i].desc);
+      }
+      setToast({ message: "Pasi proces salvati!", type: "success" });
+    } catch (err) {
+      setToast({ message: "Eroare la salvare.", type: "error" });
+    }
+  }
 
   const TABS = [
     { id: "hero", label: "Hero" },
     { id: "config", label: "Optiuni Configurare" },
     { id: "process", label: "Cum Functioneaza" },
   ];
+
+  if (loading) {
+    return (
+      <AdminLayout title="Servicii">
+        <div style={{ textAlign: "center", padding: "60px", color: "#888" }}>
+          <div style={{ fontSize: "16px", fontWeight: 600 }}>Se incarca...</div>
+        </div>
+      </AdminLayout>
+    );
+  }
 
   return (
     <AdminLayout title="Servicii">
