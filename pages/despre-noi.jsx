@@ -1,12 +1,13 @@
 import Layout, { useInView, GreenCTABanner } from "../components/Layout";
+import { Sparkles, Shield, Star, Wrench, Truck, Ruler } from "lucide-react";
 
 const VALUES = [
-  { icon: "🎨", title: "Design modern", desc: "Estetică contemporană adaptată tendințelor actuale în design interior." },
-  { icon: "🏗️", title: "Structură durabilă", desc: "PAL hidrofugat de înaltă calitate cu spate solid de 8 mm pentru rezistență sporită." },
-  { icon: "✨", title: "Finisaje premium", desc: "Finisaje moderne mate, lucioase sau texturate pentru un aspect impecabil." },
-  { icon: "🔧", title: "Montaj simplu", desc: "Sistem gândit pentru asamblare DIY rapidă, fără costuri suplimentare de instalare." },
-  { icon: "🚚", title: "Livrare rapidă", desc: "Timp de livrare redus față de mobilierul tradițional la comandă." },
-  { icon: "📐", title: "Dimensiuni adaptabile", desc: "Carcase speciale pentru spații atipice — fiecare centimetru contează." },
+  { icon: Sparkles, title: "Design modern", desc: "Estetică contemporană adaptată tendințelor actuale în design interior." },
+  { icon: Shield, title: "Structură durabilă", desc: "PAL hidrofugat de înaltă calitate cu spate solid de 8 mm pentru rezistență sporită." },
+  { icon: Star, title: "Finisaje premium", desc: "Finisaje moderne mate, lucioase sau texturate pentru un aspect impecabil." },
+  { icon: Wrench, title: "Montaj simplu", desc: "Sistem gândit pentru asamblare DIY rapidă, fără costuri suplimentare de instalare." },
+  { icon: Truck, title: "Livrare rapidă", desc: "Timp de livrare redus față de mobilierul tradițional la comandă." },
+  { icon: Ruler, title: "Dimensiuni adaptabile", desc: "Carcase speciale pentru spații atipice — fiecare centimetru contează." },
 ];
 
 export default function DespreNoi() {
@@ -102,7 +103,11 @@ export default function DespreNoi() {
                 style={{ background: "#fff", border: "1px solid #eee", borderRadius: "14px", padding: "30px 24px", transition: "box-shadow 0.25s, transform 0.25s, border-color 0.25s" }}
                 onMouseEnter={e => { e.currentTarget.style.boxShadow = "0 12px 40px rgba(0,0,0,0.08)"; e.currentTarget.style.transform = "translateY(-4px)"; e.currentTarget.style.borderColor = "var(--green)"; }}
                 onMouseLeave={e => { e.currentTarget.style.boxShadow = "none"; e.currentTarget.style.transform = "none"; e.currentTarget.style.borderColor = "#eee"; }}>
-                <div className="value-icon" style={{ fontSize: "32px", marginBottom: "14px" }}>{v.icon}</div>
+                <div className="value-icon" style={{ marginBottom: "14px" }}>
+                  <div style={{ background: "#f0f9e0", borderRadius: "10px", padding: "10px", display: "inline-flex" }}>
+                    <v.icon size={28} color="#8DC63F" />
+                  </div>
+                </div>
                 <div>
                   <h3 style={{ fontSize: "15px", fontWeight: 700, marginBottom: "10px" }}>{v.title}</h3>
                   <p style={{ fontSize: "13px", lineHeight: 1.7, color: "var(--text-muted)" }}>{v.desc}</p>

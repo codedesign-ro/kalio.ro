@@ -1,23 +1,24 @@
 import Layout, { useInView, GreenCTABanner } from "../components/Layout";
+import { Palette, Square, Settings, Layers, Ruler, Cog, Maximize, Home, Droplets, Shield, Grid3x3 as Grid, Wrench, Truck, Gem } from "lucide-react";
 
 const CONFIG_OPTIONS = [
-  { icon: "🎨", label: "Gamă variată de culori moderne" },
-  { icon: "🪟", label: "Fronturi mate, lucioase sau texturate" },
-  { icon: "🔩", label: "Mânere și butoni în diferite stiluri" },
-  { icon: "🗂️", label: "Sertare standard și sertare tip pan" },
-  { icon: "📏", label: "Plinte în mai multe variante" },
-  { icon: "⚙️", label: "Feronerie Blum (premium) sau medie" },
-  { icon: "📐", label: "Carcase speciale pentru dimensiuni personalizate" },
-  { icon: "🏠", label: "Adaptabil pentru bucătărie, dressing, living" },
+  { icon: Palette, label: "Gamă variată de culori moderne" },
+  { icon: Square, label: "Fronturi mate, lucioase sau texturate" },
+  { icon: Settings, label: "Mânere și butoni în diferite stiluri" },
+  { icon: Layers, label: "Sertare standard și sertare tip pan" },
+  { icon: Ruler, label: "Plinte în mai multe variante" },
+  { icon: Cog, label: "Feronerie Blum (premium) sau medie" },
+  { icon: Maximize, label: "Carcase speciale pentru dimensiuni personalizate" },
+  { icon: Home, label: "Adaptabil pentru bucătărie, dressing, living" },
 ];
 
 const ADVANTAGES = [
-  { title: "Materiale hidrofugate", desc: "PAL hidrofugat rezistent la umiditate pentru durabilitate maximă în orice condiții.", icon: "💧" },
-  { title: "Spate solid 8mm", desc: "Spate solid de 8 mm pentru o structură rigidă și rezistentă în timp.", icon: "🏗️" },
-  { title: "Sistem modular", desc: "Sistem modular inteligent pentru configurații nelimitate adaptat oricărui spațiu.", icon: "🧩" },
-  { title: "Montaj DIY simplu", desc: "Proiectat pentru asamblare facilă de către oricine, fără scule speciale.", icon: "🔧" },
-  { title: "Livrare rapidă", desc: "Timp de livrare redus față de mobilierul tradițional la comandă.", icon: "🚚" },
-  { title: "Raport calitate-preț", desc: "Design modern și minimalist la un raport excelent calitate-preț.", icon: "💎" },
+  { title: "Materiale hidrofugate", desc: "PAL hidrofugat rezistent la umiditate pentru durabilitate maximă în orice condiții.", icon: Droplets },
+  { title: "Spate solid 8mm", desc: "Spate solid de 8 mm pentru o structură rigidă și rezistentă în timp.", icon: Shield },
+  { title: "Sistem modular", desc: "Sistem modular inteligent pentru configurații nelimitate adaptat oricărui spațiu.", icon: Grid },
+  { title: "Montaj DIY simplu", desc: "Proiectat pentru asamblare facilă de către oricine, fără scule speciale.", icon: Wrench },
+  { title: "Livrare rapidă", desc: "Timp de livrare redus față de mobilierul tradițional la comandă.", icon: Truck },
+  { title: "Raport calitate-preț", desc: "Design modern și minimalist la un raport excelent calitate-preț.", icon: Gem },
 ];
 
 const PROCESS = [
@@ -77,7 +78,11 @@ export default function Servicii() {
                 style={{ background: "var(--gray)", borderRadius: "14px", padding: "24px 20px", border: "1px solid transparent", transition: "border-color 0.2s, box-shadow 0.2s, transform 0.2s" }}
                 onMouseEnter={e => { e.currentTarget.style.borderColor = "var(--green)"; e.currentTarget.style.boxShadow = "0 8px 24px rgba(141,198,63,0.12)"; e.currentTarget.style.transform = "translateY(-3px)"; }}
                 onMouseLeave={e => { e.currentTarget.style.borderColor = "transparent"; e.currentTarget.style.boxShadow = "none"; e.currentTarget.style.transform = "none"; }}>
-                <div style={{ fontSize: "28px", marginBottom: "12px" }}>{opt.icon}</div>
+                <div style={{ marginBottom: "12px" }}>
+                  <div style={{ background: "#f0f9e0", borderRadius: "10px", padding: "10px", display: "inline-flex" }}>
+                    <opt.icon size={28} color="#8DC63F" />
+                  </div>
+                </div>
                 <div style={{ fontSize: "13px", fontWeight: 600, lineHeight: 1.5 }}>{opt.label}</div>
               </div>
             ))}
@@ -101,7 +106,11 @@ export default function Servicii() {
             <div className={`advantages-grid fade-up d3 ${advInView ? "visible" : ""}`} style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
               {ADVANTAGES.map((adv) => (
                 <div key={adv.title} style={{ background: "#fff", borderRadius: "12px", padding: "20px 16px", border: "1px solid #eee" }}>
-                  <div style={{ fontSize: "24px", marginBottom: "8px" }}>{adv.icon}</div>
+                  <div style={{ marginBottom: "8px" }}>
+                    <div style={{ background: "#f0f9e0", borderRadius: "10px", padding: "10px", display: "inline-flex" }}>
+                      <adv.icon size={28} color="#8DC63F" />
+                    </div>
+                  </div>
                   <div style={{ fontSize: "13px", fontWeight: 700, marginBottom: "6px" }}>{adv.title}</div>
                   <div style={{ fontSize: "12px", color: "var(--text-muted)", lineHeight: 1.6 }}>{adv.desc}</div>
                 </div>

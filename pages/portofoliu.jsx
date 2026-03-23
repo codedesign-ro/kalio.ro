@@ -1,5 +1,6 @@
 import { useState } from "react";
 import Layout, { useInView, GreenCTABanner } from "../components/Layout";
+import { Briefcase, Heart, Award, Clock } from "lucide-react";
 
 const PROJECTS = [
   { id: 1, category: "Bucătărie", title: "Bucătărie modernă - Baia Mare", desc: "Bucătărie modulară cu fronturi mate gri antracit și blat de quartz alb.", img: "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&q=80", size: "tall" },
@@ -77,10 +78,13 @@ export default function Portofoliu() {
       {/* STATS */}
       <section style={{ background: "var(--gray)", padding: "60px 40px" }}>
         <div style={{ maxWidth: "1200px", margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "32px", textAlign: "center" }} className="stats-grid">
-          {[["500+", "Proiecte finalizate"], ["100%", "Clienți mulțumiți"], ["10+", "Ani de experiență"], ["48h", "Timp mediu livrare"]].map(([n, l]) => (
+          {[["500+", "Proiecte finalizate", Briefcase], ["100%", "Clienți mulțumiți", Heart], ["10+", "Ani de experiență", Award], ["48h", "Timp mediu livrare", Clock]].map(([n, l, Icon]) => (
             <div key={l}>
               <div style={{ fontFamily: "'Playfair Display', serif", fontSize: "42px", fontWeight: 700, color: "var(--green)" }}>{n}</div>
-              <div style={{ fontSize: "13px", color: "var(--text-muted)", marginTop: "6px" }}>{l}</div>
+              <div style={{ fontSize: "13px", color: "var(--text-muted)", marginTop: "6px", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
+                <Icon size={20} color="#8DC63F" />
+                {l}
+              </div>
             </div>
           ))}
         </div>
