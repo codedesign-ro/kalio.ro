@@ -29,9 +29,9 @@ export async function getStaticProps() {
       img: r.img || "",
       size: r.featured ? "tall" : "normal",
     }));
-    return { props: { projects }, revalidate: 60 };
+    return { props: { projects }, revalidate: 10 };
   } catch (e) {
-    return { props: { projects: [] }, revalidate: 60 };
+    return { props: { projects: [] }, revalidate: 10 };
   }
 }
 

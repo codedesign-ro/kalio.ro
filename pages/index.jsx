@@ -26,35 +26,37 @@ export async function getStaticProps() {
     const items = await pb.collection('site_content').getFullList({ filter: 'page = "homepage"' });
     const content = {};
     items.forEach(item => { content[item.key] = item.value; });
-    return { props: { content }, revalidate: 60 };
+    return { props: { content }, revalidate: 10 };
   } catch (e) {
-    return { props: { content: {} }, revalidate: 60 };
+    return { props: { content: {} }, revalidate: 10 };
   }
 }
 
 export default function Home({ content = {} }) {
+const get = (key, fallback) => (content[key] && content[key].trim() !== '') ? content[key] : fallback;
+
 const [heroRef, heroInView] = useInView(0.1);
 const [missionRef, missionInView] = useInView(0.1);
 const [featuresRef, featuresInView] = useInView(0.1);
 const [ctaRef, ctaInView] = useInView(0.1);
 
-const badge = content.hero_badge || "Design modular";
-const heroTitle = content.hero_title || "Mobilier modular,";
-const heroHighlight = content.hero_titleHighlight || "reinventat.";
-const heroSubtitle = content.hero_subtitle || "Creează-ți spațiul perfect cu Kalio -- mobilier personalizabil, de calitate superioară, livrat rapid și ușor de asamblat.";
-const btnPrimary = content.hero_btnPrimary || "Creează-ți mobila";
-const btnSecondary = content.hero_btnSecondary || "Contact";
+const badge = get('hero_badge', "Design modular");
+const heroTitle = get('hero_title', "Mobilier modular,");
+const heroHighlight = get('hero_titleHighlight', "reinventat.");
+const heroSubtitle = get('hero_subtitle', "Creează-ți spațiul perfect cu Kalio -- mobilier personalizabil, de calitate superioară, livrat rapid și ușor de asamblat.");
+const btnPrimary = get('hero_btnPrimary', "Creează-ți mobila");
+const btnSecondary = get('hero_btnSecondary', "Contact");
 
 const stats = [
-  [content.stat_0_value || "500+", content.stat_0_label || "Proiecte livrate"],
-  [content.stat_1_value || "8mm", content.stat_1_label || "Spate solid"],
-  [content.stat_2_value || "100%", content.stat_2_label || "Personalizabil"],
+  [get('stat_0_value', "500+"), get('stat_0_label', "Proiecte livrate")],
+  [get('stat_1_value', "8mm"), get('stat_1_label', "Spate solid")],
+  [get('stat_2_value', "100%"), get('stat_2_label', "Personalizabil")],
 ];
 
 const FEATURES = DEFAULT_FEATURES.map((f, i) => ({
   ...f,
-  title: content[`feature_${i}_title`] || f.title,
-  desc: content[`feature_${i}_desc`] || f.desc,
+  title: get(`feature_${i}_title`, f.title),
+  desc: get(`feature_${i}_desc`, f.desc),
 }));
 
 return (

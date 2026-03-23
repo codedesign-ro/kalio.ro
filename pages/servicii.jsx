@@ -35,31 +35,33 @@ export async function getStaticProps() {
     const items = await pb.collection('site_content').getFullList({ filter: 'page = "servicii"' });
     const content = {};
     items.forEach(item => { content[item.key] = item.value; });
-    return { props: { content }, revalidate: 60 };
+    return { props: { content }, revalidate: 10 };
   } catch (e) {
-    return { props: { content: {} }, revalidate: 60 };
+    return { props: { content: {} }, revalidate: 10 };
   }
 }
 
 export default function Servicii({ content = {} }) {
+  const get = (key, fallback) => (content[key] && content[key].trim() !== '') ? content[key] : fallback;
+
   const [heroRef, heroInView] = useInView(0.1);
   const [configRef, configInView] = useInView(0.1);
   const [advRef, advInView] = useInView(0.1);
   const [processRef, processInView] = useInView(0.1);
 
-  const heroTitle = content.hero_title || "Soluții modulare pentru";
-  const heroHighlight = content.hero_titleHighlight || "fiecare spațiu.";
-  const heroSubtitle = content.hero_subtitle || "Mobilier personalizat, construit pe un sistem modular eficient și flexibil. Kalio îți oferă flexibilitatea mobilierului la comandă, cu eficiența unui sistem modular bine optimizat.";
+  const heroTitle = get('hero_title', "Soluții modulare pentru");
+  const heroHighlight = get('hero_titleHighlight', "fiecare spațiu.");
+  const heroSubtitle = get('hero_subtitle', "Mobilier personalizat, construit pe un sistem modular eficient și flexibil. Kalio îți oferă flexibilitatea mobilierului la comandă, cu eficiența unui sistem modular bine optimizat.");
 
   const CONFIG_OPTIONS = DEFAULT_CONFIG_OPTIONS.map((opt, i) => ({
     ...opt,
-    label: content[`config_${i}`] || opt.label,
+    label: get(`config_${i}`, opt.label),
   }));
 
   const PROCESS = DEFAULT_PROCESS.map((step, i) => ({
     ...step,
-    title: content[`process_${i}_title`] || step.title,
-    desc: content[`process_${i}_desc`] || step.desc,
+    title: get(`process_${i}_title`, step.title),
+    desc: get(`process_${i}_desc`, step.desc),
   }));
 
   return (

@@ -9,13 +9,15 @@ export async function getStaticProps() {
     const items = await pb.collection('site_content').getFullList({ filter: 'page = "contact"' });
     const content = {};
     items.forEach(item => { content[item.key] = item.value; });
-    return { props: { content }, revalidate: 60 };
+    return { props: { content }, revalidate: 10 };
   } catch (e) {
-    return { props: { content: {} }, revalidate: 60 };
+    return { props: { content: {} }, revalidate: 10 };
   }
 }
 
 export default function Contact({ content = {} }) {
+  const get = (key, fallback) => (content[key] && content[key].trim() !== '') ? content[key] : fallback;
+
   const [submitted, setSubmitted] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", phone: "", subject: "", message: "" });
   const [heroRef, heroInView] = useInView(0.1);
@@ -24,15 +26,15 @@ export default function Contact({ content = {} }) {
   const handleChange = (e) => setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
   const handleSubmit = (e) => { e.preventDefault(); setSubmitted(true); };
 
-  const heroTitle = content.heroTitle || "Hai să discutăm despre";
-  const heroHighlight = content.heroHighlight || "proiectul tău.";
-  const heroSubtitle = content.heroSubtitle || "Indiferent dacă ai nevoie de informații despre configurare, livrare sau materiale, echipa Kalio este pregătită să te ajute.";
+  const heroTitle = get('heroTitle', "Hai să discutăm despre");
+  const heroHighlight = get('heroHighlight', "proiectul tău.");
+  const heroSubtitle = get('heroSubtitle', "Indiferent dacă ai nevoie de informații despre configurare, livrare sau materiale, echipa Kalio este pregătită să te ajute.");
 
-  const address = content.address || "Str. Mărului 121, Baia Mare";
-  const email = content.email || "contact@kalio.ro";
-  const phone = content.phone || "+40 754 32 43 58";
-  const hoursWeekday = content.hoursWeekday || "Luni – Vineri, 9:00 – 18:00";
-  const mapsUrl = content.mapsUrl || "https://maps.google.com/?q=Str.+Marului+121+Baia+Mare";
+  const address = get('address', "Str. Mărului 121, Baia Mare");
+  const email = get('email', "contact@kalio.ro");
+  const phone = get('phone', "+40 754 32 43 58");
+  const hoursWeekday = get('hoursWeekday', "Luni – Vineri, 9:00 – 18:00");
+  const mapsUrl = get('mapsUrl', "https://maps.google.com/?q=Str.+Marului+121+Baia+Mare");
 
   const CONTACT_INFO = [
     { icon: MapPin, label: "Adresă", value: address, sub: "România" },

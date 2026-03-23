@@ -26,34 +26,36 @@ export async function getStaticProps() {
     const items = await pb.collection('site_content').getFullList({ filter: 'page = "despre-noi"' });
     const content = {};
     items.forEach(item => { content[item.key] = item.value; });
-    return { props: { content }, revalidate: 60 };
+    return { props: { content }, revalidate: 10 };
   } catch (e) {
-    return { props: { content: {} }, revalidate: 60 };
+    return { props: { content: {} }, revalidate: 10 };
   }
 }
 
 export default function DespreNoi({ content = {} }) {
+  const get = (key, fallback) => (content[key] && content[key].trim() !== '') ? content[key] : fallback;
+
   const [heroRef, heroInView] = useInView(0.1);
   const [missionRef, missionInView] = useInView(0.1);
   const [valuesRef, valuesInView] = useInView(0.1);
   const [whyRef, whyInView] = useInView(0.1);
 
-  const heroTitle = content.hero_title || "Mobilier modular creat pentru";
-  const heroHighlight = content.hero_titleHighlight || "libertate și flexibilitate.";
-  const heroSubtitle = content.hero_subtitle || "La Kalio, construim mobilier care se adaptează spațiului tău, nu invers. Combinăm designul modern cu un sistem modular inteligent, pentru a-ți oferi control total asupra fiecărui detaliu.";
+  const heroTitle = get('hero_title', "Mobilier modular creat pentru");
+  const heroHighlight = get('hero_titleHighlight', "libertate și flexibilitate.");
+  const heroSubtitle = get('hero_subtitle', "La Kalio, construim mobilier care se adaptează spațiului tău, nu invers. Combinăm designul modern cu un sistem modular inteligent, pentru a-ți oferi control total asupra fiecărui detaliu.");
 
-  const missionTitle = content.mission_title || "Calitate în";
-  const missionHighlight = content.mission_titleHighlight || "fiecare detaliu";
-  const missionText1 = content.mission_text1 || "Fiecare corp de mobilier Kalio este realizat din PAL hidrofugat de înaltă calitate, cu spate solid de 8 mm pentru rezistență sporită. Punem accent pe structură durabilă, finisaje moderne și montaj simplu.";
-  const missionText2 = content.mission_text2 || "Kalio oferă echilibrul perfect între personalizare, eficiență și calitate. Alegi culori, fronturi, mânere, sertare și feronerie. Dimensiuni adaptabile pentru spații atipice.";
+  const missionTitle = get('mission_title', "Calitate în");
+  const missionHighlight = get('mission_titleHighlight', "fiecare detaliu");
+  const missionText1 = get('mission_text1', "Fiecare corp de mobilier Kalio este realizat din PAL hidrofugat de înaltă calitate, cu spate solid de 8 mm pentru rezistență sporită. Punem accent pe structură durabilă, finisaje moderne și montaj simplu.");
+  const missionText2 = get('mission_text2', "Kalio oferă echilibrul perfect între personalizare, eficiență și calitate. Alegi culori, fronturi, mânere, sertare și feronerie. Dimensiuni adaptabile pentru spații atipice.");
 
   const missionStats = [
-    [content.mission_stat1Value || "10+", content.mission_stat1Label || "Ani experiență"],
-    [content.mission_stat2Value || "500+", content.mission_stat2Label || "Proiecte livrate"],
-    [content.mission_stat3Value || "100%", content.mission_stat3Label || "Personalizabil"],
+    [get('mission_stat1Value', "10+"), get('mission_stat1Label', "Ani experiență")],
+    [get('mission_stat2Value', "500+"), get('mission_stat2Label', "Proiecte livrate")],
+    [get('mission_stat3Value', "100%"), get('mission_stat3Label', "Personalizabil")],
   ];
 
-  const images = DEFAULT_IMAGES.map((def, i) => content[`image_${i}`] || def);
+  const images = DEFAULT_IMAGES.map((def, i) => get(`image_${i}`, def));
 
   return (
     <Layout title="Despre Noi — Kalio Mobilier Modular">
