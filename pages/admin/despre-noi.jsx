@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/router";
+import { Upload } from "lucide-react";
 import AdminLayout, { Toast } from "../../components/admin/AdminLayout";
 import pb from "../../lib/pocketbase";
 
@@ -18,6 +19,9 @@ export default function AdminDespreNoi() {
     stat2Value: "", stat2Label: "",
     stat3Value: "", stat3Label: "",
   });
+
+  const [uploadingIdx, setUploadingIdx] = useState(null);
+  const fileInputRefs = useRef([]);
 
   const [images, setImages] = useState([
     { id: 1, url: "", label: "Imagine 1 (stanga sus)" },
@@ -116,6 +120,25 @@ export default function AdminDespreNoi() {
     } catch (err) {
       setToast({ message: "Eroare la salvare.", type: "error" });
     }
+  }
+
+  async function handleImageUpload(idx, e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingIdx(idx);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const record = await pb.collection('media').create(formData);
+      const fileUrl = pb.files.getUrl(record, record.file);
+      setImages(prev => prev.map((img, i) => i === idx ? { ...img, url: fileUrl } : img));
+      setToast({ message: "Imagine urcata cu succes!", type: "success" });
+    } catch (err) {
+      console.error("Error uploading image:", err);
+      setToast({ message: "Eroare la urcarea imaginii.", type: "error" });
+    }
+    setUploadingIdx(null);
+    if (fileInputRefs.current[idx]) fileInputRefs.current[idx].value = "";
   }
 
   async function saveImages(e) {
@@ -255,7 +278,15 @@ export default function AdminDespreNoi() {
                   </div>
                   <div>
                     <label className="admin-label" style={{ marginBottom: "8px" }}>{img.label}</label>
-                    <input className="admin-input" value={img.url} onChange={e => setImages(prev => prev.map((x, j) => j === i ? { ...x, url: e.target.value } : x))} placeholder="https://..." />
+                    <div style={{ display: "flex", gap: "8px" }}>
+                      <input className="admin-input" value={img.url} onChange={e => setImages(prev => prev.map((x, j) => j === i ? { ...x, url: e.target.value } : x))} placeholder="https://..." style={{ flex: 1 }} />
+                      <input type="file" accept="image/*" ref={el => fileInputRefs.current[i] = el} onChange={e => handleImageUpload(i, e)} style={{ display: "none" }} />
+                      <button type="button" disabled={uploadingIdx === i} onClick={() => fileInputRefs.current[i]?.click()}
+                        style={{ background: uploadingIdx === i ? "#eee" : "#f0f9e0", border: "1.5px solid #8DC63F", color: "#6fa82e", borderRadius: "8px", padding: "8px 14px", fontSize: "13px", fontWeight: 600, cursor: uploadingIdx === i ? "not-allowed" : "pointer", display: "flex", alignItems: "center", gap: "6px", whiteSpace: "nowrap", fontFamily: "inherit" }}>
+                        <Upload size={14} />
+                        {uploadingIdx === i ? "Se urca..." : "Upload"}
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}

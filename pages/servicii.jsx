@@ -1,7 +1,8 @@
+import PocketBase from "pocketbase";
 import Layout, { useInView, GreenCTABanner } from "../components/Layout";
 import { Palette, Square, Settings, Layers, Ruler, Cog, Maximize, Home, Droplets, Shield, Grid3x3 as Grid, Wrench, Truck, Gem } from "lucide-react";
 
-const CONFIG_OPTIONS = [
+const DEFAULT_CONFIG_OPTIONS = [
   { icon: Palette, label: "Gamă variată de culori moderne" },
   { icon: Square, label: "Fronturi mate, lucioase sau texturate" },
   { icon: Settings, label: "Mânere și butoni în diferite stiluri" },
@@ -21,18 +22,45 @@ const ADVANTAGES = [
   { title: "Raport calitate-preț", desc: "Design modern și minimalist la un raport excelent calitate-preț.", icon: Gem },
 ];
 
-const PROCESS = [
+const DEFAULT_PROCESS = [
   { step: "01", title: "Configurezi", desc: "Alegi dimensiunile, culorile, fronturile și toate detaliile dorite prin sistemul nostru de configurare." },
   { step: "02", title: "Confirmăm", desc: "Echipa Kalio verifică configurația și te contactăm pentru confirmare și plată." },
   { step: "03", title: "Producem", desc: "Mobilierul tău este produs cu grijă în atelierul nostru din PAL hidrofugat premium." },
   { step: "04", title: "Livrăm", desc: "Livrăm rapid la adresa ta, gata pentru asamblare DIY ușoară." },
 ];
 
-export default function Servicii() {
+export async function getStaticProps() {
+  const pb = new PocketBase(process.env.NEXT_PUBLIC_POCKETBASE_URL || 'https://pb.kalio.ro');
+  try {
+    const items = await pb.collection('site_content').getFullList({ filter: 'page = "servicii"' });
+    const content = {};
+    items.forEach(item => { content[item.key] = item.value; });
+    return { props: { content }, revalidate: 60 };
+  } catch (e) {
+    return { props: { content: {} }, revalidate: 60 };
+  }
+}
+
+export default function Servicii({ content = {} }) {
   const [heroRef, heroInView] = useInView(0.1);
   const [configRef, configInView] = useInView(0.1);
   const [advRef, advInView] = useInView(0.1);
   const [processRef, processInView] = useInView(0.1);
+
+  const heroTitle = content.hero_title || "Soluții modulare pentru";
+  const heroHighlight = content.hero_titleHighlight || "fiecare spațiu.";
+  const heroSubtitle = content.hero_subtitle || "Mobilier personalizat, construit pe un sistem modular eficient și flexibil. Kalio îți oferă flexibilitatea mobilierului la comandă, cu eficiența unui sistem modular bine optimizat.";
+
+  const CONFIG_OPTIONS = DEFAULT_CONFIG_OPTIONS.map((opt, i) => ({
+    ...opt,
+    label: content[`config_${i}`] || opt.label,
+  }));
+
+  const PROCESS = DEFAULT_PROCESS.map((step, i) => ({
+    ...step,
+    title: content[`process_${i}_title`] || step.title,
+    desc: content[`process_${i}_desc`] || step.desc,
+  }));
 
   return (
     <Layout title="Servicii — Kalio Mobilier Modular">
@@ -45,11 +73,11 @@ export default function Servicii() {
               <span style={{ background: "#f0f9e0", color: "var(--green)", fontSize: "12px", fontWeight: 700, padding: "5px 14px", borderRadius: "20px", letterSpacing: "1px", textTransform: "uppercase" }}>Servicii</span>
             </div>
             <h1 className={`fade-up d1 ${heroInView ? "visible" : ""}`} style={{ fontFamily: "'Playfair Display', serif", fontSize: "clamp(34px, 4.5vw, 52px)", fontWeight: 700, lineHeight: 1.15, margin: "14px 0 20px" }}>
-              Soluții modulare pentru{" "}
-              <em style={{ color: "var(--green)", fontStyle: "italic" }}>fiecare spațiu.</em>
+              {heroTitle}{" "}
+              <em style={{ color: "var(--green)", fontStyle: "italic" }}>{heroHighlight}</em>
             </h1>
             <p className={`fade-up d2 ${heroInView ? "visible" : ""}`} style={{ fontSize: "16px", lineHeight: 1.75, color: "var(--text-muted)", marginBottom: "36px", maxWidth: "460px" }}>
-              Mobilier personalizat, construit pe un sistem modular eficient și flexibil. Kalio îți oferă flexibilitatea mobilierului la comandă, cu eficiența unui sistem modular bine optimizat.
+              {heroSubtitle}
             </p>
             <a href="/configurator" className={`btn-primary fade-up d3 ${heroInView ? "visible" : ""}`} style={{ fontSize: "15px", padding: "13px 28px" }}>Creează-ți mobila</a>
           </div>
@@ -74,7 +102,7 @@ export default function Servicii() {
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "16px" }} className="config-grid">
             {CONFIG_OPTIONS.map((opt, i) => (
-              <div key={opt.label} className={`fade-up d${(i % 4) + 1} ${configInView ? "visible" : ""}`}
+              <div key={i} className={`fade-up d${(i % 4) + 1} ${configInView ? "visible" : ""}`}
                 style={{ background: "var(--gray)", borderRadius: "14px", padding: "24px 20px", border: "1px solid transparent", transition: "border-color 0.2s, box-shadow 0.2s, transform 0.2s" }}
                 onMouseEnter={e => { e.currentTarget.style.borderColor = "var(--green)"; e.currentTarget.style.boxShadow = "0 8px 24px rgba(141,198,63,0.12)"; e.currentTarget.style.transform = "translateY(-3px)"; }}
                 onMouseLeave={e => { e.currentTarget.style.borderColor = "transparent"; e.currentTarget.style.boxShadow = "none"; e.currentTarget.style.transform = "none"; }}>

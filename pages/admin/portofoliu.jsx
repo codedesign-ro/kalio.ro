@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/router";
+import { Upload } from "lucide-react";
 import AdminLayout, { Toast } from "../../components/admin/AdminLayout";
 import pb from "../../lib/pocketbase";
 
@@ -14,6 +15,8 @@ export default function AdminPortofoliu() {
   const [toast, setToast] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [form, setForm] = useState({ title: "", category: "Bucatarie", desc: "", img: "", featured: false });
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     if (!pb.authStore.isValid) {
@@ -76,6 +79,38 @@ export default function AdminPortofoliu() {
       console.error("Error deleting project:", err);
       setToast({ message: "Eroare la stergere.", type: "error" });
     }
+  }
+
+  async function handleFileUpload(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('image', file);
+      if (editing) {
+        const updated = await pb.collection('portfolio').update(editing, formData);
+        const fileUrl = pb.files.getUrl(updated, updated.image);
+        setForm(p => ({ ...p, img: fileUrl }));
+        setProjects(prev => prev.map(p => p.id === editing ? { ...updated, img: fileUrl } : p));
+      } else {
+        const tempRecord = await pb.collection('portfolio').create({
+          ...form,
+          order: projects.length,
+          image: file,
+        });
+        const fileUrl = pb.files.getUrl(tempRecord, tempRecord.image);
+        setForm(p => ({ ...p, img: fileUrl }));
+        setEditing(tempRecord.id);
+        setProjects(prev => [...prev, { ...tempRecord, img: fileUrl }]);
+      }
+      setToast({ message: "Imagine urcata cu succes!", type: "success" });
+    } catch (err) {
+      console.error("Error uploading image:", err);
+      setToast({ message: "Eroare la urcarea imaginii.", type: "error" });
+    }
+    setUploading(false);
+    if (fileInputRef.current) fileInputRef.current.value = "";
   }
 
   async function toggleFeatured(id) {
@@ -183,7 +218,15 @@ export default function AdminPortofoliu() {
               </div>
               <div>
                 <label className="admin-label">URL Imagine *</label>
-                <input className="admin-input" placeholder="https://..." value={form.img} onChange={e => setForm(p => ({ ...p, img: e.target.value }))} required />
+                <div style={{ display: "flex", gap: "8px" }}>
+                  <input className="admin-input" placeholder="https://..." value={form.img} onChange={e => setForm(p => ({ ...p, img: e.target.value }))} required style={{ flex: 1 }} />
+                  <input type="file" accept="image/*" ref={fileInputRef} onChange={handleFileUpload} style={{ display: "none" }} />
+                  <button type="button" disabled={uploading} onClick={() => fileInputRef.current?.click()}
+                    style={{ background: uploading ? "#eee" : "#f0f9e0", border: "1.5px solid #8DC63F", color: "#6fa82e", borderRadius: "8px", padding: "8px 14px", fontSize: "13px", fontWeight: 600, cursor: uploading ? "not-allowed" : "pointer", display: "flex", alignItems: "center", gap: "6px", whiteSpace: "nowrap", fontFamily: "inherit" }}>
+                    <Upload size={14} />
+                    {uploading ? "Se urca..." : "Upload"}
+                  </button>
+                </div>
                 {form.img && (
                   <img src={form.img} alt="preview" style={{ width: "100%", height: "160px", objectFit: "cover", borderRadius: "8px", marginTop: "8px" }} />
                 )}

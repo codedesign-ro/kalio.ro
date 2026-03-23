@@ -1,14 +1,21 @@
 import { useState } from "react";
+import PocketBase from "pocketbase";
 import Layout, { useInView } from "../components/Layout";
 import { MapPin, Mail, Phone, Zap, MessageCircle, FileText } from "lucide-react";
 
-const CONTACT_INFO = [
-  { icon: MapPin, label: "Adresă", value: "Str. Mărului 121, Baia Mare", sub: "România" },
-  { icon: Mail, label: "Email", value: "contact@kalio.ro", sub: "Răspundem în 24h" },
-  { icon: Phone, label: "Telefon", value: "+40 754 32 43 58", sub: "Luni – Vineri, 9:00 – 18:00" },
-];
+export async function getStaticProps() {
+  const pb = new PocketBase(process.env.NEXT_PUBLIC_POCKETBASE_URL || 'https://pb.kalio.ro');
+  try {
+    const items = await pb.collection('site_content').getFullList({ filter: 'page = "contact"' });
+    const content = {};
+    items.forEach(item => { content[item.key] = item.value; });
+    return { props: { content }, revalidate: 60 };
+  } catch (e) {
+    return { props: { content: {} }, revalidate: 60 };
+  }
+}
 
-export default function Contact() {
+export default function Contact({ content = {} }) {
   const [submitted, setSubmitted] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", phone: "", subject: "", message: "" });
   const [heroRef, heroInView] = useInView(0.1);
@@ -16,6 +23,22 @@ export default function Contact() {
 
   const handleChange = (e) => setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
   const handleSubmit = (e) => { e.preventDefault(); setSubmitted(true); };
+
+  const heroTitle = content.heroTitle || "Hai să discutăm despre";
+  const heroHighlight = content.heroHighlight || "proiectul tău.";
+  const heroSubtitle = content.heroSubtitle || "Indiferent dacă ai nevoie de informații despre configurare, livrare sau materiale, echipa Kalio este pregătită să te ajute.";
+
+  const address = content.address || "Str. Mărului 121, Baia Mare";
+  const email = content.email || "contact@kalio.ro";
+  const phone = content.phone || "+40 754 32 43 58";
+  const hoursWeekday = content.hoursWeekday || "Luni – Vineri, 9:00 – 18:00";
+  const mapsUrl = content.mapsUrl || "https://maps.google.com/?q=Str.+Marului+121+Baia+Mare";
+
+  const CONTACT_INFO = [
+    { icon: MapPin, label: "Adresă", value: address, sub: "România" },
+    { icon: Mail, label: "Email", value: email, sub: "Răspundem în 24h" },
+    { icon: Phone, label: "Telefon", value: phone, sub: hoursWeekday },
+  ];
 
   return (
     <Layout title="Contact — Kalio Mobilier Modular">
@@ -27,10 +50,10 @@ export default function Contact() {
             <span style={{ background: "#f0f9e0", color: "var(--green)", fontSize: "12px", fontWeight: 700, padding: "5px 14px", borderRadius: "20px", letterSpacing: "1px", textTransform: "uppercase" }}>Contact</span>
           </div>
           <h1 className={`fade-up d1 ${heroInView ? "visible" : ""}`} style={{ fontFamily: "'Playfair Display', serif", fontSize: "clamp(34px, 5vw, 56px)", fontWeight: 700, lineHeight: 1.15, margin: "16px 0 20px" }}>
-            Hai să discutăm despre <em style={{ color: "var(--green)", fontStyle: "italic" }}>proiectul tău.</em>
+            {heroTitle} <em style={{ color: "var(--green)", fontStyle: "italic" }}>{heroHighlight}</em>
           </h1>
           <p className={`fade-up d2 ${heroInView ? "visible" : ""}`} style={{ fontSize: "16px", lineHeight: 1.75, color: "var(--text-muted)", maxWidth: "540px", margin: "0 auto" }}>
-            Indiferent dacă ai nevoie de informații despre configurare, livrare sau materiale, echipa Kalio este pregătită să te ajute.
+            {heroSubtitle}
           </p>
         </div>
       </section>
@@ -148,9 +171,9 @@ export default function Contact() {
             <div style={{ width: "48px", height: "48px", background: "var(--green)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 12px" }}>
               <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M11 2C7.686 2 5 4.686 5 8c0 4.5 6 12 6 12s6-7.5 6-12c0-3.314-2.686-6-6-6z" fill="#fff"/><circle cx="11" cy="8" r="2" fill="var(--green)"/></svg>
             </div>
-            <div style={{ fontWeight: 700, fontSize: "15px", color: "#333" }}>Str. Mărului 121, Baia Mare</div>
+            <div style={{ fontWeight: 700, fontSize: "15px", color: "#333" }}>{address}</div>
             <div style={{ fontSize: "13px", color: "var(--text-muted)", marginTop: "4px" }}>România</div>
-            <a href="https://maps.google.com/?q=Str.+Marului+121+Baia+Mare" target="_blank" rel="noreferrer"
+            <a href={mapsUrl} target="_blank" rel="noreferrer"
               style={{ display: "inline-block", marginTop: "12px", background: "var(--green)", color: "#fff", padding: "8px 18px", borderRadius: "6px", fontSize: "13px", fontWeight: 600, textDecoration: "none" }}>
               Deschide în Google Maps
             </a>

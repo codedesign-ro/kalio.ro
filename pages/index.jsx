@@ -1,7 +1,8 @@
+import PocketBase from "pocketbase";
 import Layout, { useInView, GreenCTABanner } from "../components/Layout";
 import { Sliders, Shield, Truck, Wrench } from "lucide-react";
 
-const FEATURES = [
+const DEFAULT_FEATURES = [
   { icon: Sliders, title: "Personalizare totală", desc: "Personalizează mobilierul exact cum dorești. Alege culorile, fronturile, mânerele și multe altele." },
   { icon: Shield, title: "PAL Hidrofugat Premium", desc: "Construit din PAL hidrofugat premium, cu spate solid de 8 mm pentru durabilitate sporită." },
   { icon: Truck, title: "Livrare rapidă", desc: "Fără luni de așteptare. Mobilierul tău personalizat ajunge la tine rapid și eficient." },
@@ -19,11 +20,42 @@ const CHECKLIST = [
 "Asamblare DIY ușoară",
 ];
 
-export default function Home() {
+export async function getStaticProps() {
+  const pb = new PocketBase(process.env.NEXT_PUBLIC_POCKETBASE_URL || 'https://pb.kalio.ro');
+  try {
+    const items = await pb.collection('site_content').getFullList({ filter: 'page = "homepage"' });
+    const content = {};
+    items.forEach(item => { content[item.key] = item.value; });
+    return { props: { content }, revalidate: 60 };
+  } catch (e) {
+    return { props: { content: {} }, revalidate: 60 };
+  }
+}
+
+export default function Home({ content = {} }) {
 const [heroRef, heroInView] = useInView(0.1);
 const [missionRef, missionInView] = useInView(0.1);
 const [featuresRef, featuresInView] = useInView(0.1);
 const [ctaRef, ctaInView] = useInView(0.1);
+
+const badge = content.hero_badge || "Design modular";
+const heroTitle = content.hero_title || "Mobilier modular,";
+const heroHighlight = content.hero_titleHighlight || "reinventat.";
+const heroSubtitle = content.hero_subtitle || "Creează-ți spațiul perfect cu Kalio -- mobilier personalizabil, de calitate superioară, livrat rapid și ușor de asamblat.";
+const btnPrimary = content.hero_btnPrimary || "Creează-ți mobila";
+const btnSecondary = content.hero_btnSecondary || "Contact";
+
+const stats = [
+  [content.stat_0_value || "500+", content.stat_0_label || "Proiecte livrate"],
+  [content.stat_1_value || "8mm", content.stat_1_label || "Spate solid"],
+  [content.stat_2_value || "100%", content.stat_2_label || "Personalizabil"],
+];
+
+const FEATURES = DEFAULT_FEATURES.map((f, i) => ({
+  ...f,
+  title: content[`feature_${i}_title`] || f.title,
+  desc: content[`feature_${i}_desc`] || f.desc,
+}));
 
 return (
 <Layout title="Kalio -- Mobilier Modular, Reinventat">
@@ -33,21 +65,21 @@ return (
   <section ref={heroRef} style={{ paddingTop: "64px", minHeight: "92vh", display: "grid", gridTemplateColumns: "1fr 1fr", alignItems: "center", gap: "48px", maxWidth: "1200px", margin: "0 auto", padding: "120px 40px 80px" }} className="hero-grid">
     <div>
       <div className={`fade-up ${heroInView ? "visible" : ""}`} style={{ marginBottom: "8px" }}>
-        <span style={{ background: "#f0f9e0", color: "var(--green)", fontSize: "12px", fontWeight: 700, padding: "5px 14px", borderRadius: "20px", letterSpacing: "1px", textTransform: "uppercase" }}>Design modular</span>
+        <span style={{ background: "#f0f9e0", color: "var(--green)", fontSize: "12px", fontWeight: 700, padding: "5px 14px", borderRadius: "20px", letterSpacing: "1px", textTransform: "uppercase" }}>{badge}</span>
       </div>
       <h1 className={`fade-up d1 ${heroInView ? "visible" : ""}`} style={{ fontFamily: "'Playfair Display', serif", fontSize: "clamp(38px, 5vw, 58px)", fontWeight: 700, lineHeight: 1.15, marginTop: "16px", marginBottom: "20px" }}>
-        Mobilier modular,{" "}
-        <em style={{ color: "var(--green)", fontStyle: "italic" }}>reinventat.</em>
+        {heroTitle}{" "}
+        <em style={{ color: "var(--green)", fontStyle: "italic" }}>{heroHighlight}</em>
       </h1>
       <p className={`fade-up d2 ${heroInView ? "visible" : ""}`} style={{ fontSize: "16px", lineHeight: 1.7, color: "var(--text-muted)", maxWidth: "420px", marginBottom: "36px" }}>
-        Creează-ți spațiul perfect cu Kalio -- mobilier personalizabil, de calitate superioară, livrat rapid și ușor de asamblat.
+        {heroSubtitle}
       </p>
       <div className={`fade-up d3 ${heroInView ? "visible" : ""}`} style={{ display: "flex", gap: "14px", flexWrap: "wrap" }}>
-        <a href="/configurator" className="btn-primary" style={{ fontSize: "15px", padding: "13px 28px" }}>Creează-ți mobila</a>
-        <a href="/contact" className="btn-outline" style={{ fontSize: "15px", padding: "13px 28px" }}>Contact</a>
+        <a href="/configurator" className="btn-primary" style={{ fontSize: "15px", padding: "13px 28px" }}>{btnPrimary}</a>
+        <a href="/contact" className="btn-outline" style={{ fontSize: "15px", padding: "13px 28px" }}>{btnSecondary}</a>
       </div>
       <div className={`fade-up d4 ${heroInView ? "visible" : ""}`} style={{ marginTop: "48px", display: "flex", gap: "36px" }}>
-        {[["500+", "Proiecte livrate"], ["8mm", "Spate solid"], ["100%", "Personalizabil"]].map(([n, l]) => (
+        {stats.map(([n, l]) => (
           <div key={l}>
             <div style={{ fontSize: "24px", fontWeight: 700, color: "var(--green)" }}>{n}</div>
             <div style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "2px" }}>{l}</div>

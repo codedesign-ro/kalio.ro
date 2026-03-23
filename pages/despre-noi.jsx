@@ -1,7 +1,8 @@
+import PocketBase from "pocketbase";
 import Layout, { useInView, GreenCTABanner } from "../components/Layout";
 import { Sparkles, Shield, Star, Wrench, Truck, Ruler } from "lucide-react";
 
-const VALUES = [
+const DEFAULT_VALUES = [
   { icon: Sparkles, title: "Design modern", desc: "Estetică contemporană adaptată tendințelor actuale în design interior." },
   { icon: Shield, title: "Structură durabilă", desc: "PAL hidrofugat de înaltă calitate cu spate solid de 8 mm pentru rezistență sporită." },
   { icon: Star, title: "Finisaje premium", desc: "Finisaje moderne mate, lucioase sau texturate pentru un aspect impecabil." },
@@ -10,11 +11,49 @@ const VALUES = [
   { icon: Ruler, title: "Dimensiuni adaptabile", desc: "Carcase speciale pentru spații atipice — fiecare centimetru contează." },
 ];
 
-export default function DespreNoi() {
+const DEFAULT_IMAGES = [
+  "https://images.unsplash.com/photo-1565538810643-b5bdb714032a?w=600&q=80",
+  "https://images.unsplash.com/photo-1556909172-54557c7e4fb7?w=600&q=80",
+  "https://images.unsplash.com/photo-1631679706909-1844bbd07221?w=600&q=80",
+  "https://images.unsplash.com/photo-1484101403633-562f891dc89a?w=600&q=80",
+  "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=900&q=80",
+  "https://images.unsplash.com/photo-1556909172-54557c7e4fb7?w=900&q=80",
+];
+
+export async function getStaticProps() {
+  const pb = new PocketBase(process.env.NEXT_PUBLIC_POCKETBASE_URL || 'https://pb.kalio.ro');
+  try {
+    const items = await pb.collection('site_content').getFullList({ filter: 'page = "despre-noi"' });
+    const content = {};
+    items.forEach(item => { content[item.key] = item.value; });
+    return { props: { content }, revalidate: 60 };
+  } catch (e) {
+    return { props: { content: {} }, revalidate: 60 };
+  }
+}
+
+export default function DespreNoi({ content = {} }) {
   const [heroRef, heroInView] = useInView(0.1);
   const [missionRef, missionInView] = useInView(0.1);
   const [valuesRef, valuesInView] = useInView(0.1);
   const [whyRef, whyInView] = useInView(0.1);
+
+  const heroTitle = content.hero_title || "Mobilier modular creat pentru";
+  const heroHighlight = content.hero_titleHighlight || "libertate și flexibilitate.";
+  const heroSubtitle = content.hero_subtitle || "La Kalio, construim mobilier care se adaptează spațiului tău, nu invers. Combinăm designul modern cu un sistem modular inteligent, pentru a-ți oferi control total asupra fiecărui detaliu.";
+
+  const missionTitle = content.mission_title || "Calitate în";
+  const missionHighlight = content.mission_titleHighlight || "fiecare detaliu";
+  const missionText1 = content.mission_text1 || "Fiecare corp de mobilier Kalio este realizat din PAL hidrofugat de înaltă calitate, cu spate solid de 8 mm pentru rezistență sporită. Punem accent pe structură durabilă, finisaje moderne și montaj simplu.";
+  const missionText2 = content.mission_text2 || "Kalio oferă echilibrul perfect între personalizare, eficiență și calitate. Alegi culori, fronturi, mânere, sertare și feronerie. Dimensiuni adaptabile pentru spații atipice.";
+
+  const missionStats = [
+    [content.mission_stat1Value || "10+", content.mission_stat1Label || "Ani experiență"],
+    [content.mission_stat2Value || "500+", content.mission_stat2Label || "Proiecte livrate"],
+    [content.mission_stat3Value || "100%", content.mission_stat3Label || "Personalizabil"],
+  ];
+
+  const images = DEFAULT_IMAGES.map((def, i) => content[`image_${i}`] || def);
 
   return (
     <Layout title="Despre Noi — Kalio Mobilier Modular">
@@ -27,11 +66,11 @@ export default function DespreNoi() {
               <span style={{ background: "#f0f9e0", color: "var(--green)", fontSize: "12px", fontWeight: 700, padding: "5px 14px", borderRadius: "20px", letterSpacing: "1px", textTransform: "uppercase" }}>Despre noi</span>
             </div>
             <h1 className={`fade-up d1 ${heroInView ? "visible" : ""}`} style={{ fontFamily: "'Playfair Display', serif", fontSize: "clamp(34px, 4.5vw, 52px)", fontWeight: 700, lineHeight: 1.15, marginBottom: "20px" }}>
-              Mobilier modular creat pentru{" "}
-              <em style={{ color: "var(--green)", fontStyle: "italic" }}>libertate și flexibilitate.</em>
+              {heroTitle}{" "}
+              <em style={{ color: "var(--green)", fontStyle: "italic" }}>{heroHighlight}</em>
             </h1>
             <p className={`fade-up d2 ${heroInView ? "visible" : ""}`} style={{ fontSize: "16px", lineHeight: 1.75, color: "var(--text-muted)", marginBottom: "36px", maxWidth: "460px" }}>
-              La Kalio, construim mobilier care se adaptează spațiului tău, nu invers. Combinăm designul modern cu un sistem modular inteligent, pentru a-ți oferi control total asupra fiecărui detaliu.
+              {heroSubtitle}
             </p>
             <div className={`fade-up d3 ${heroInView ? "visible" : ""}`} style={{ display: "flex", gap: "14px" }}>
               <a href="/configurator" className="btn-primary" style={{ fontSize: "15px", padding: "13px 28px" }}>Creează-ți mobila</a>
@@ -40,7 +79,7 @@ export default function DespreNoi() {
           </div>
           <div className={`fade-up d2 ${heroInView ? "visible" : ""}`}>
             <div className="img-hover" style={{ height: "480px" }}>
-              <img src="https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=900&q=80" alt="Kalio atelier" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+              <img src={images[4]} alt="Kalio atelier" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
             </div>
           </div>
         </div>
@@ -50,12 +89,7 @@ export default function DespreNoi() {
       <section ref={missionRef} style={{ padding: "100px 40px", background: "#fff" }}>
         <div style={{ maxWidth: "1200px", margin: "0 auto", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "80px", alignItems: "center" }} className="why-grid">
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
-            {[
-              "https://images.unsplash.com/photo-1565538810643-b5bdb714032a?w=600&q=80",
-              "https://images.unsplash.com/photo-1556909172-54557c7e4fb7?w=600&q=80",
-              "https://images.unsplash.com/photo-1631679706909-1844bbd07221?w=600&q=80",
-              "https://images.unsplash.com/photo-1484101403633-562f891dc89a?w=600&q=80",
-            ].map((src, i) => (
+            {images.slice(0, 4).map((src, i) => (
               <div key={i} className={`img-hover fade-up d${i + 1} ${missionInView ? "visible" : ""}`} style={{ height: i % 2 === 0 ? "200px" : "170px", marginTop: i % 2 !== 0 ? "28px" : "0" }}>
                 <img src={src} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
               </div>
@@ -66,16 +100,16 @@ export default function DespreNoi() {
               <span style={{ background: "#f0f9e0", color: "var(--green)", fontSize: "12px", fontWeight: 700, padding: "5px 14px", borderRadius: "20px", letterSpacing: "1px", textTransform: "uppercase" }}>Misiunea noastră</span>
             </div>
             <h2 className={`fade-up d1 ${missionInView ? "visible" : ""}`} style={{ fontFamily: "'Playfair Display', serif", fontSize: "clamp(26px, 3.2vw, 40px)", fontWeight: 700, lineHeight: 1.2, margin: "16px 0 20px" }}>
-              Calitate în <span style={{ color: "var(--green)" }}>fiecare detaliu</span>
+              {missionTitle} <span style={{ color: "var(--green)" }}>{missionHighlight}</span>
             </h2>
             <p className={`fade-up d2 ${missionInView ? "visible" : ""}`} style={{ fontSize: "15px", lineHeight: 1.8, color: "#444", marginBottom: "16px" }}>
-              Fiecare corp de mobilier Kalio este realizat din PAL hidrofugat de înaltă calitate, cu spate solid de 8 mm pentru rezistență sporită. Punem accent pe structură durabilă, finisaje moderne și montaj simplu.
+              {missionText1}
             </p>
             <p className={`fade-up d3 ${missionInView ? "visible" : ""}`} style={{ fontSize: "15px", lineHeight: 1.8, color: "#444", marginBottom: "32px" }}>
-              Kalio oferă echilibrul perfect între personalizare, eficiență și calitate. Alegi culori, fronturi, mânere, sertare și feronerie. Dimensiuni adaptabile pentru spații atipice.
+              {missionText2}
             </p>
             <div className={`fade-up d4 ${missionInView ? "visible" : ""}`} style={{ display: "flex", gap: "32px" }}>
-              {[["10+", "Ani experiență"], ["500+", "Proiecte livrate"], ["100%", "Personalizabil"]].map(([n, l]) => (
+              {missionStats.map(([n, l]) => (
                 <div key={l}>
                   <div style={{ fontSize: "28px", fontWeight: 700, color: "var(--green)" }}>{n}</div>
                   <div style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "2px" }}>{l}</div>
@@ -98,7 +132,7 @@ export default function DespreNoi() {
             </p>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "20px" }} className="values-grid">
-            {VALUES.map((v, i) => (
+            {DEFAULT_VALUES.map((v, i) => (
               <div key={v.title} className={`value-card fade-up d${(i % 3) + 1} ${valuesInView ? "visible" : ""}`}
                 style={{ background: "#fff", border: "1px solid #eee", borderRadius: "14px", padding: "30px 24px", transition: "box-shadow 0.25s, transform 0.25s, border-color 0.25s" }}
                 onMouseEnter={e => { e.currentTarget.style.boxShadow = "0 12px 40px rgba(0,0,0,0.08)"; e.currentTarget.style.transform = "translateY(-4px)"; e.currentTarget.style.borderColor = "var(--green)"; }}
@@ -154,7 +188,7 @@ export default function DespreNoi() {
             <a href="/configurator" className={`btn-primary fade-up d4 ${whyInView ? "visible" : ""}`} style={{ fontSize: "15px", padding: "13px 28px" }}>Creează-ți mobila →</a>
           </div>
           <div className={`img-hover fade-up d2 ${whyInView ? "visible" : ""}`} style={{ height: "500px" }}>
-            <img src="https://images.unsplash.com/photo-1556909172-54557c7e4fb7?w=900&q=80" alt="Kalio modern kitchen" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+            <img src={images[5]} alt="Kalio modern kitchen" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
           </div>
         </div>
       </section>
