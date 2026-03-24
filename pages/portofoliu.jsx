@@ -21,14 +21,22 @@ export async function getServerSideProps() {
   const pb = new PocketBase(process.env.NEXT_PUBLIC_POCKETBASE_URL || 'https://pb.kalio.ro');
   try {
     const records = await pb.collection('portfolio').getFullList({ sort: 'order' });
-    const projects = records.map(r => ({
-      id: r.id,
-      category: r.category || "",
-      title: r.title || "",
-      desc: r.desc || "",
-      img: r.img || "",
-      size: r.featured ? "tall" : "normal",
-    }));
+    const projects = records.map(r => {
+      let imgSrc = "";
+      if (r.image) {
+        imgSrc = pb.files.getURL(r, r.image);
+      } else if (r.image_url && r.image_url !== "N/A") {
+        imgSrc = r.image_url;
+      }
+      return {
+        id: r.id,
+        category: r.category || "",
+        title: r.title || "",
+        desc: r.description || "",
+        img: imgSrc,
+        size: r.featured ? "tall" : "normal",
+      };
+    });
     return { props: { projects }};
   } catch (e) {
     console.error('[portofoliu] PocketBase fetch error:', e?.message || e);

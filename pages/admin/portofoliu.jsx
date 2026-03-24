@@ -6,6 +6,16 @@ import pb from "../../lib/pocketbase";
 
 const CATEGORIES = ["Bucatarie", "Dressing", "Living", "Baie"];
 
+function getProjectImage(project) {
+  if (project.image) {
+    return pb.files.getURL(project, project.image);
+  }
+  if (project.image_url && project.image_url !== "N/A") {
+    return project.image_url;
+  }
+  return "";
+}
+
 export default function AdminPortofoliu() {
   const router = useRouter();
   const [projects, setProjects] = useState([]);
@@ -14,7 +24,7 @@ export default function AdminPortofoliu() {
   const [editing, setEditing] = useState(null);
   const [toast, setToast] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
-  const [form, setForm] = useState({ title: "", category: "Bucatarie", desc: "", img: "", featured: false });
+  const [form, setForm] = useState({ title: "", category: "Bucatarie", description: "", image_url: "", featured: false });
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef(null);
 
@@ -40,25 +50,38 @@ export default function AdminPortofoliu() {
 
   function openAdd() {
     setEditing(null);
-    setForm({ title: "", category: "Bucatarie", desc: "", img: "", featured: false });
+    setForm({ title: "", category: "Bucatarie", description: "", image_url: "", featured: false });
     setShowModal(true);
   }
 
   function openEdit(project) {
     setEditing(project.id);
-    setForm({ title: project.title, category: project.category, desc: project.desc, img: project.img, featured: project.featured });
+    setForm({
+      title: project.title || "",
+      category: project.category || "Bucatarie",
+      description: project.description || "",
+      image_url: getProjectImage(project),
+      featured: project.featured || false,
+    });
     setShowModal(true);
   }
 
   async function handleSave(e) {
     e.preventDefault();
     try {
+      const data = {
+        title: form.title,
+        category: form.category,
+        description: form.description,
+        image_url: form.image_url,
+        featured: form.featured,
+      };
       if (editing) {
-        const updated = await pb.collection('portfolio').update(editing, form);
+        const updated = await pb.collection('portfolio').update(editing, data);
         setProjects(prev => prev.map(p => p.id === editing ? updated : p));
         setToast({ message: "Proiect actualizat cu succes!", type: "success" });
       } else {
-        const created = await pb.collection('portfolio').create({ ...form, order: projects.length });
+        const created = await pb.collection('portfolio').create({ ...data, order: projects.length });
         setProjects(prev => [...prev, created]);
         setToast({ message: "Proiect adaugat cu succes!", type: "success" });
       }
@@ -90,19 +113,22 @@ export default function AdminPortofoliu() {
       formData.append('image', file);
       if (editing) {
         const updated = await pb.collection('portfolio').update(editing, formData);
-        const fileUrl = pb.files.getUrl(updated, updated.image);
-        setForm(p => ({ ...p, img: fileUrl }));
-        setProjects(prev => prev.map(p => p.id === editing ? { ...updated, img: fileUrl } : p));
+        const fileUrl = pb.files.getURL(updated, updated.image);
+        setForm(p => ({ ...p, image_url: fileUrl }));
+        setProjects(prev => prev.map(p => p.id === editing ? updated : p));
       } else {
-        const tempRecord = await pb.collection('portfolio').create({
-          ...form,
-          order: projects.length,
-          image: file,
-        });
-        const fileUrl = pb.files.getUrl(tempRecord, tempRecord.image);
-        setForm(p => ({ ...p, img: fileUrl }));
-        setEditing(tempRecord.id);
-        setProjects(prev => [...prev, { ...tempRecord, img: fileUrl }]);
+        const data = new FormData();
+        data.append('image', file);
+        data.append('title', form.title);
+        data.append('category', form.category);
+        data.append('description', form.description);
+        data.append('featured', form.featured);
+        data.append('order', projects.length);
+        const created = await pb.collection('portfolio').create(data);
+        const fileUrl = pb.files.getURL(created, created.image);
+        setForm(p => ({ ...p, image_url: fileUrl }));
+        setEditing(created.id);
+        setProjects(prev => [...prev, created]);
       }
       setToast({ message: "Imagine urcata cu succes!", type: "success" });
     } catch (err) {
@@ -154,7 +180,7 @@ export default function AdminPortofoliu() {
         {projects.map(p => (
           <div key={p.id} className="admin-card" style={{ padding: "0", overflow: "hidden" }}>
             <div style={{ position: "relative", height: "180px", overflow: "hidden" }}>
-              <img src={p.img || "https://via.placeholder.com/400x180"} alt={p.title}
+              <img src={getProjectImage(p) || "https://via.placeholder.com/400x180"} alt={p.title}
                 style={{ width: "100%", height: "100%", objectFit: "cover" }} />
               <div style={{ position: "absolute", top: "10px", right: "10px", display: "flex", gap: "6px" }}>
                 <button onClick={() => toggleFeatured(p.id)}
@@ -168,7 +194,7 @@ export default function AdminPortofoliu() {
             </div>
             <div style={{ padding: "16px" }}>
               <h3 style={{ fontSize: "14px", fontWeight: 700, marginBottom: "6px", color: "#1a1a1a" }}>{p.title}</h3>
-              <p style={{ fontSize: "12px", color: "#888", lineHeight: 1.6, marginBottom: "14px" }}>{p.desc}</p>
+              <p style={{ fontSize: "12px", color: "#888", lineHeight: 1.6, marginBottom: "14px" }}>{p.description}</p>
               <div style={{ display: "flex", gap: "8px" }}>
                 <button className="admin-btn secondary" style={{ flex: 1, justifyContent: "center", padding: "8px 12px", fontSize: "13px" }} onClick={() => openEdit(p)}>
                   Editeaza
@@ -214,12 +240,12 @@ export default function AdminPortofoliu() {
               </div>
               <div>
                 <label className="admin-label">Descriere *</label>
-                <textarea className="admin-input" placeholder="Descriere scurta a proiectului..." value={form.desc} onChange={e => setForm(p => ({ ...p, desc: e.target.value }))} rows={3} style={{ resize: "vertical" }} required />
+                <textarea className="admin-input" placeholder="Descriere scurta a proiectului..." value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} rows={3} style={{ resize: "vertical" }} required />
               </div>
               <div>
                 <label className="admin-label">URL Imagine *</label>
                 <div style={{ display: "flex", gap: "8px" }}>
-                  <input className="admin-input" placeholder="https://..." value={form.img} onChange={e => setForm(p => ({ ...p, img: e.target.value }))} required style={{ flex: 1 }} />
+                  <input className="admin-input" placeholder="https://..." value={form.image_url} onChange={e => setForm(p => ({ ...p, image_url: e.target.value }))} style={{ flex: 1 }} />
                   <input type="file" accept="image/*" ref={fileInputRef} onChange={handleFileUpload} style={{ display: "none" }} />
                   <button type="button" disabled={uploading} onClick={() => fileInputRef.current?.click()}
                     style={{ background: uploading ? "#eee" : "#f0f9e0", border: "1.5px solid #8DC63F", color: "#6fa82e", borderRadius: "8px", padding: "8px 14px", fontSize: "13px", fontWeight: 600, cursor: uploading ? "not-allowed" : "pointer", display: "flex", alignItems: "center", gap: "6px", whiteSpace: "nowrap", fontFamily: "inherit" }}>
@@ -227,8 +253,8 @@ export default function AdminPortofoliu() {
                     {uploading ? "Se urca..." : "Upload"}
                   </button>
                 </div>
-                {form.img && (
-                  <img src={form.img} alt="preview" style={{ width: "100%", height: "160px", objectFit: "cover", borderRadius: "8px", marginTop: "8px" }} />
+                {form.image_url && (
+                  <img src={form.image_url} alt="preview" style={{ width: "100%", height: "160px", objectFit: "cover", borderRadius: "8px", marginTop: "8px" }} />
                 )}
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
