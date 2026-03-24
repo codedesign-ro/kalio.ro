@@ -57,6 +57,15 @@ const stats = [
   [get('stat_2_value', "100%"), get('stat_2_label', "Personalizabil")],
 ];
 
+const heroImage = get('hero_image', 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=900&q=80');
+const missionImages = [
+  get('mission_img1', 'https://images.unsplash.com/photo-1565538810643-b5bdb714032a?w=500&q=80'),
+  get('mission_img2', 'https://images.unsplash.com/photo-1556909172-54557c7e4fb7?w=500&q=80'),
+  get('mission_img3', 'https://images.unsplash.com/photo-1631679706909-1844bbd07221?w=500&q=80'),
+  get('mission_img4', 'https://images.unsplash.com/photo-1484101403633-562f891dc89a?w=500&q=80'),
+];
+const ctaImage = get('cta_image', 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&q=80');
+
 const FEATURES = DEFAULT_FEATURES.map((f, i) => ({
   ...f,
   title: get(`feature_${i}_title`, f.title),
@@ -96,7 +105,7 @@ return (
 
     <div className={`fade-up d2 ${heroInView ? "visible" : ""}`} style={{ position: "relative" }}>
       <div className="img-hover" style={{ height: "500px", borderRadius: "20px" }}>
-        <img src="https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=900&q=80" alt="Modern kitchen by Kalio" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+        <img src={heroImage} alt="Modern kitchen by Kalio" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
       </div>
       <div style={{ position: "absolute", bottom: "24px", left: "-20px", background: "#fff", borderRadius: "14px", padding: "16px 20px", boxShadow: "0 8px 32px rgba(0,0,0,0.12)", display: "flex", alignItems: "center", gap: "12px", minWidth: "200px" }}>
         <div style={{ width: "40px", height: "40px", background: "#f0f9e0", borderRadius: "10px", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -134,12 +143,7 @@ return (
           <a href="/configurator" className={`btn-primary fade-up d3 ${missionInView ? "visible" : ""}`} style={{ fontSize: "14px" }}>Creează-ți mobila →</a>
         </div>
         <div className="mission-images" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
-          {[
-            "https://images.unsplash.com/photo-1565538810643-b5bdb714032a?w=500&q=80",
-            "https://images.unsplash.com/photo-1556909172-54557c7e4fb7?w=500&q=80",
-            "https://images.unsplash.com/photo-1631679706909-1844bbd07221?w=500&q=80",
-            "https://images.unsplash.com/photo-1484101403633-562f891dc89a?w=500&q=80",
-          ].map((src, i) => (
+          {missionImages.map((src, i) => (
             <div key={i} className={`img-hover fade-up d${i + 1} ${missionInView ? "visible" : ""}`} style={{ height: i % 2 === 0 ? "190px" : "160px", marginTop: i % 2 !== 0 ? "24px" : "0" }}>
               <img src={src} alt="" />
             </div>
@@ -176,7 +180,7 @@ return (
   <section ref={ctaRef} style={{ background: "var(--gray)", padding: "100px 40px" }}>
     <div style={{ maxWidth: "1200px", margin: "0 auto", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "60px", alignItems: "center" }} className="cta-grid">
       <div className={`img-hover fade-up ${ctaInView ? "visible" : ""}`} style={{ height: "460px" }}>
-        <img src="https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&q=80" alt="Kalio modular kitchen" />
+        <img src={ctaImage} alt="Kalio modular kitchen" />
       </div>
       <div>
         <div className={`fade-up d1 ${ctaInView ? "visible" : ""}`}>

@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/router";
+import { Upload } from "lucide-react";
 import AdminLayout, { Toast } from "../../components/admin/AdminLayout";
 import pb from "../../lib/pocketbase";
 
@@ -24,6 +25,17 @@ export default function AdminHomepage() {
     { value: "8mm", label: "Spate solid" },
     { value: "100%", label: "Personalizabil" },
   ]);
+
+  const [images, setImages] = useState({
+    hero_image: "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=900&q=80",
+    mission_img1: "https://images.unsplash.com/photo-1565538810643-b5bdb714032a?w=500&q=80",
+    mission_img2: "https://images.unsplash.com/photo-1556909172-54557c7e4fb7?w=500&q=80",
+    mission_img3: "https://images.unsplash.com/photo-1631679706909-1844bbd07221?w=500&q=80",
+    mission_img4: "https://images.unsplash.com/photo-1484101403633-562f891dc89a?w=500&q=80",
+    cta_image: "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&q=80",
+  });
+  const [uploadingKey, setUploadingKey] = useState(null);
+  const imgFileRefs = useRef({});
 
   const [features, setFeatures] = useState([
     { title: "Personalizare totala", desc: "Personalizeaza mobilierul exact cum doresti. Alege culorile, fronturile, manerele si multe altele." },
@@ -72,6 +84,14 @@ export default function AdminHomepage() {
           { title: map.feature_2_title?.value || "", desc: map.feature_2_desc?.value || "" },
           { title: map.feature_3_title?.value || "", desc: map.feature_3_desc?.value || "" },
         ]);
+        const imgKeys = ['hero_image', 'mission_img1', 'mission_img2', 'mission_img3', 'mission_img4', 'cta_image'];
+        setImages(prev => {
+          const updated = { ...prev };
+          for (const k of imgKeys) {
+            if (map[k]?.value) updated[k] = map[k].value;
+          }
+          return updated;
+        });
       }
     } catch (err) {
       console.error("Error fetching homepage content:", err);
@@ -133,10 +153,43 @@ export default function AdminHomepage() {
     }
   }
 
+  async function handleImageUpload(key, e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingKey(key);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const record = await pb.collection('media').create(formData);
+      const fileUrl = pb.files.getURL(record, record.file);
+      setImages(prev => ({ ...prev, [key]: fileUrl }));
+      setToast({ message: "Imagine urcata cu succes!", type: "success" });
+    } catch (err) {
+      console.error("Error uploading image:", err);
+      setToast({ message: "Eroare la urcarea imaginii.", type: "error" });
+    }
+    setUploadingKey(null);
+    if (imgFileRefs.current[key]) imgFileRefs.current[key].value = "";
+  }
+
+  async function saveImages(e) {
+    e.preventDefault();
+    try {
+      for (const [key, value] of Object.entries(images)) {
+        await saveField(key, value);
+      }
+      setToast({ message: "Imagini salvate!", type: "success" });
+    } catch (err) {
+      console.error("Error saving images:", err);
+      setToast({ message: "Eroare la salvare.", type: "error" });
+    }
+  }
+
   const TABS = [
     { id: "hero", label: "Hero Section" },
     { id: "stats", label: "Statistici" },
     { id: "features", label: "Feature Cards" },
+    { id: "images", label: "Imagini" },
   ];
 
   if (loading) {
@@ -276,6 +329,44 @@ export default function AdminHomepage() {
               ))}
             </div>
             <button type="submit" className="admin-btn">Salveaza Feature Cards</button>
+          </div>
+        </form>
+      )}
+      {/* IMAGES TAB */}
+      {activeTab === "images" && (
+        <form onSubmit={saveImages}>
+          <div className="admin-card">
+            <h3 className="admin-card-title" style={{ marginBottom: "8px" }}>Imagini Pagina</h3>
+            <p style={{ fontSize: "13px", color: "#888", marginBottom: "24px" }}>Actualizeaza imaginile afisate pe pagina principala.</p>
+
+            {[
+              { key: "hero_image", label: "Imagine Hero (dreapta)" },
+              { key: "mission_img1", label: "Misiune - Imagine 1 (stanga sus)" },
+              { key: "mission_img2", label: "Misiune - Imagine 2 (dreapta sus)" },
+              { key: "mission_img3", label: "Misiune - Imagine 3 (stanga jos)" },
+              { key: "mission_img4", label: "Misiune - Imagine 4 (dreapta jos)" },
+              { key: "cta_image", label: "Imagine CTA Section" },
+            ].map(({ key, label }) => (
+              <div key={key} style={{ background: "#f5f5f3", borderRadius: "12px", padding: "16px", marginBottom: "16px", display: "grid", gridTemplateColumns: "120px 1fr", gap: "16px", alignItems: "center" }}>
+                <div style={{ height: "80px", borderRadius: "8px", overflow: "hidden", background: "#eee" }}>
+                  {images[key] && <img src={images[key]} alt={label} style={{ width: "100%", height: "100%", objectFit: "cover" }} />}
+                </div>
+                <div>
+                  <label className="admin-label" style={{ marginBottom: "8px" }}>{label}</label>
+                  <div style={{ display: "flex", gap: "8px" }}>
+                    <input className="admin-input" value={images[key]} onChange={e => setImages(prev => ({ ...prev, [key]: e.target.value }))} placeholder="https://..." style={{ flex: 1 }} />
+                    <input type="file" accept="image/*" ref={el => imgFileRefs.current[key] = el} onChange={e => handleImageUpload(key, e)} style={{ display: "none" }} />
+                    <button type="button" disabled={uploadingKey === key} onClick={() => imgFileRefs.current[key]?.click()}
+                      style={{ background: uploadingKey === key ? "#eee" : "#f0f9e0", border: "1.5px solid #8DC63F", color: "#6fa82e", borderRadius: "8px", padding: "8px 14px", fontSize: "13px", fontWeight: 600, cursor: uploadingKey === key ? "not-allowed" : "pointer", display: "flex", alignItems: "center", gap: "6px", whiteSpace: "nowrap", fontFamily: "inherit" }}>
+                      <Upload size={14} />
+                      {uploadingKey === key ? "Se urca..." : "Upload"}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+
+            <button type="submit" className="admin-btn">Salveaza Imagini</button>
           </div>
         </form>
       )}
