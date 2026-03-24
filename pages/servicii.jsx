@@ -59,6 +59,9 @@ export default function Servicii({ content = {} }) {
     label: get(`config_${i}`, opt.label),
   }));
 
+  const heroImage = get('servicii_hero_image', 'https://images.unsplash.com/photo-1565538810643-b5bdb714032a?w=900&q=80');
+  const avantajeImage = get('servicii_avantaje_image', 'https://images.unsplash.com/photo-1556909172-54557c7e4fb7?w=900&q=80');
+
   const PROCESS = DEFAULT_PROCESS.map((step, i) => ({
     ...step,
     title: get(`process_${i}_title`, step.title),
@@ -86,7 +89,7 @@ export default function Servicii({ content = {} }) {
           </div>
           <div className={`fade-up d2 ${heroInView ? "visible" : ""}`}>
             <div className="img-hover" style={{ height: "460px" }}>
-              <img src="https://images.unsplash.com/photo-1565538810643-b5bdb714032a?w=900&q=80" alt="Kalio services" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+              <img src={heroImage} alt="Kalio services" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
             </div>
           </div>
         </div>
@@ -149,7 +152,7 @@ export default function Servicii({ content = {} }) {
             </div>
           </div>
           <div className={`adv-image img-hover fade-up d2 ${advInView ? "visible" : ""}`} style={{ height: "560px" }}>
-            <img src="https://images.unsplash.com/photo-1556909172-54557c7e4fb7?w=900&q=80" alt="Kalio quality" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+            <img src={avantajeImage} alt="Kalio quality" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
           </div>
         </div>
       </section>

@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/router";
+import { Upload } from "lucide-react";
 import AdminLayout, { Toast } from "../../components/admin/AdminLayout";
 import pb from "../../lib/pocketbase";
 
@@ -26,6 +27,13 @@ export default function AdminServicii() {
     { id: 7, label: "Carcase speciale pentru dimensiuni personalizate" },
     { id: 8, label: "Adaptabil pentru bucatarie, dressing, living" },
   ]);
+
+  const [svcImages, setSvcImages] = useState({
+    servicii_hero_image: "https://images.unsplash.com/photo-1565538810643-b5bdb714032a?w=900&q=80",
+    servicii_avantaje_image: "https://images.unsplash.com/photo-1556909172-54557c7e4fb7?w=900&q=80",
+  });
+  const [uploadingKey, setUploadingKey] = useState(null);
+  const imgFileRefs = useRef({});
 
   const [process, setProcess] = useState([
     { step: "01", title: "Configurezi", desc: "Alegi dimensiunile, culorile, fronturile si toate detaliile dorite." },
@@ -69,6 +77,13 @@ export default function AdminServicii() {
           title: map[`process_${i}_title`]?.value || "",
           desc: map[`process_${i}_desc`]?.value || "",
         })));
+        setSvcImages(prev => {
+          const updated = { ...prev };
+          for (const k of ['servicii_hero_image', 'servicii_avantaje_image']) {
+            if (map[k]?.value) updated[k] = map[k].value;
+          }
+          return updated;
+        });
       }
     } catch (err) {
       console.error("Error fetching servicii content:", err);
@@ -123,10 +138,42 @@ export default function AdminServicii() {
     }
   }
 
+  async function handleImageUpload(key, e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingKey(key);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const record = await pb.collection('media').create(formData);
+      const fileUrl = pb.files.getURL(record, record.file);
+      setSvcImages(prev => ({ ...prev, [key]: fileUrl }));
+      setToast({ message: "Imagine urcata cu succes!", type: "success" });
+    } catch (err) {
+      console.error("Error uploading image:", err);
+      setToast({ message: "Eroare la urcarea imaginii.", type: "error" });
+    }
+    setUploadingKey(null);
+    if (imgFileRefs.current[key]) imgFileRefs.current[key].value = "";
+  }
+
+  async function saveImagesHandler(e) {
+    e.preventDefault();
+    try {
+      for (const [key, value] of Object.entries(svcImages)) {
+        await saveField(key, value);
+      }
+      setToast({ message: "Imagini salvate!", type: "success" });
+    } catch (err) {
+      setToast({ message: "Eroare la salvare.", type: "error" });
+    }
+  }
+
   const TABS = [
     { id: "hero", label: "Hero" },
     { id: "config", label: "Optiuni Configurare" },
     { id: "process", label: "Cum Functioneaza" },
+    { id: "images", label: "Imagini" },
   ];
 
   if (loading) {
@@ -223,6 +270,41 @@ export default function AdminServicii() {
               ))}
             </div>
             <button type="submit" className="admin-btn">Salveaza Pasi</button>
+          </div>
+        </form>
+      )}
+
+      {/* IMAGES TAB */}
+      {activeTab === "images" && (
+        <form onSubmit={saveImagesHandler}>
+          <div className="admin-card">
+            <h3 className="admin-card-title" style={{ marginBottom: "8px" }}>Imagini Pagina</h3>
+            <p style={{ fontSize: "13px", color: "#888", marginBottom: "24px" }}>Actualizeaza imaginile afisate pe pagina Servicii.</p>
+
+            {[
+              { key: "servicii_hero_image", label: "Imagine Hero (dreapta)" },
+              { key: "servicii_avantaje_image", label: "Imagine Avantaje (dreapta)" },
+            ].map(({ key, label }) => (
+              <div key={key} style={{ background: "#f5f5f3", borderRadius: "12px", padding: "16px", marginBottom: "16px", display: "grid", gridTemplateColumns: "120px 1fr", gap: "16px", alignItems: "center" }}>
+                <div style={{ height: "80px", borderRadius: "8px", overflow: "hidden", background: "#eee" }}>
+                  {svcImages[key] && <img src={svcImages[key]} alt={label} style={{ width: "100%", height: "100%", objectFit: "cover" }} />}
+                </div>
+                <div>
+                  <label className="admin-label" style={{ marginBottom: "8px" }}>{label}</label>
+                  <div style={{ display: "flex", gap: "8px" }}>
+                    <input className="admin-input" value={svcImages[key]} onChange={e => setSvcImages(prev => ({ ...prev, [key]: e.target.value }))} placeholder="https://..." style={{ flex: 1 }} />
+                    <input type="file" accept="image/*" ref={el => imgFileRefs.current[key] = el} onChange={e => handleImageUpload(key, e)} style={{ display: "none" }} />
+                    <button type="button" disabled={uploadingKey === key} onClick={() => imgFileRefs.current[key]?.click()}
+                      style={{ background: uploadingKey === key ? "#eee" : "#f0f9e0", border: "1.5px solid #8DC63F", color: "#6fa82e", borderRadius: "8px", padding: "8px 14px", fontSize: "13px", fontWeight: 600, cursor: uploadingKey === key ? "not-allowed" : "pointer", display: "flex", alignItems: "center", gap: "6px", whiteSpace: "nowrap", fontFamily: "inherit" }}>
+                      <Upload size={14} />
+                      {uploadingKey === key ? "Se urca..." : "Upload"}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+
+            <button type="submit" className="admin-btn">Salveaza Imagini</button>
           </div>
         </form>
       )}
